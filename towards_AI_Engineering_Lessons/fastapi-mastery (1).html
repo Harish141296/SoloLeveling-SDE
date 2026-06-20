@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FastAPI, From Scratch to Expert</title>
+<meta name="description" content="A complete, single-file FastAPI guide: every core topic with runnable examples and things to try.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --teal:#13B5A6; --teal-deep:#0B8076; --teal-soft:#E2F6F3;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --get:#2E7DD7; --post:#13A07F; --put:#D98324; --patch:#8B5CF6; --delete:#D9534F;
+  --radius:14px; --maxw:1300px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--teal-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em;
+  background:var(--teal-soft); color:#0a6c63; padding:.1em .38em; border-radius:5px; font-weight:500}
+.callout code, .topic-head code{background:rgba(19,181,166,.14)}
+
+/* progress bar */
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--teal),var(--amber)); z-index:200; transition:width .1s linear}
+
+/* layout */
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+
+/* sidebar */
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:26px 0 60px}
+.brand{padding:0 24px 18px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.18rem; color:#fff; letter-spacing:-.01em}
+.bolt{width:26px;height:26px;flex:none}
+.brand .tag{margin-top:6px; font-size:.74rem; color:#8f9bb8; letter-spacing:.14em; text-transform:uppercase}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 16px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--teal),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup{padding:2px 0}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--teal); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.78rem; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.86rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--teal); background:rgba(19,181,166,.1); font-weight:500}
+
+/* mobile nav toggle */
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+
+/* main */
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+
+/* hero */
+.hero{padding:64px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--teal-deep);
+  background:var(--teal-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.02;
+  font-size:clamp(2.3rem,6vw,4.1rem); margin:20px 0 0}
+.hero h1 .fast{color:var(--teal)}
+.hero p.lede{font-size:clamp(1.05rem,2vw,1.28rem); color:#404a63; max-width:640px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:30px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--teal-deep)}
+
+/* method legend */
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin:26px 0 0}
+
+/* topic */
+.topic{padding:52px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.5rem,3vw,2rem);
+  margin:0; line-height:1.15}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.12rem; margin:30px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:720px}
+.topic ul{max-width:740px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--teal); border-radius:2px; transform:rotate(45deg)}
+
+/* method pills */
+.method{font-family:'JetBrains Mono'; font-weight:600; font-size:.72rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px}
+.method.get{background:var(--get)} .method.post{background:var(--post)}
+.method.put{background:var(--put)} .method.patch{background:var(--patch)} .method.delete{background:var(--delete)}
+
+/* code */
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);
+  border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px; letter-spacing:.02em}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover{background:var(--teal); color:#04231f}
+.copy.done{background:var(--teal); color:#04231f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px 18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.65; font-weight:400}
+.hljs{background:none!important}
+
+/* callouts */
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:760px}
+.callout > div{flex:1; min-width:0}
+.callout-tag{flex:none; font-family:'JetBrains Mono'; font-size:.68rem; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .callout-tag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .callout-tag{background:var(--amber); color:#3d2a05}
+.callout p{margin:0}
+
+/* footer */
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem; text-align:center}
+footer .bolt{vertical-align:middle; margin-right:6px}
+
+::selection{background:var(--teal); color:#04231f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar ::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="topbar">
+  <button id="menuBtn" aria-label="Open navigation">&#9776;</button>
+  <span>FastAPI Mastery</span>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg class="bolt" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#13B5A6" stroke="#13B5A6" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        FastAPI Mastery
+      </div>
+      <div class="tag">scratch &rarr; expert</div>
+    </div>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Foundations</span></div><ul>
+<li><a href="#what">What FastAPI is, and why it wins</a></li>
+<li><a href="#install">Install and set up your environment</a></li>
+<li><a href="#first">Your first app</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Routing &amp; Parameters</span></div><ul>
+<li><a href="#methods">Path operations &amp; HTTP methods</a></li>
+<li><a href="#path-params">Path parameters</a></li>
+<li><a href="#query-params">Query parameters</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Request Data &amp; Validation</span></div><ul>
+<li><a href="#body">Request bodies with Pydantic</a></li>
+<li><a href="#pydantic">Pydantic models in depth</a></li>
+<li><a href="#validation">Validating query, path &amp; body metadata</a></li>
+<li><a href="#forms-files">Form data &amp; file uploads</a></li>
+<li><a href="#headers-cookies">Headers &amp; cookies</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Responses</span></div><ul>
+<li><a href="#response-model">Response models</a></li>
+<li><a href="#status-codes">Status codes</a></li>
+<li><a href="#errors">Error handling</a></li>
+<li><a href="#custom-responses">Custom response types</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">05</span><span class="navtitle">Structure &amp; Dependencies</span></div><ul>
+<li><a href="#depends">Dependency injection</a></li>
+<li><a href="#yield-deps">Dependencies with yield (cleanup)</a></li>
+<li><a href="#routers">Bigger apps: APIRouter &amp; structure</a></li>
+<li><a href="#settings">Settings &amp; configuration</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">06</span><span class="navtitle">Database</span></div><ul>
+<li><a href="#database">Database CRUD with SQLModel</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">07</span><span class="navtitle">Security &amp; Auth</span></div><ul>
+<li><a href="#oauth2-jwt">OAuth2 password flow + JWT</a></li>
+<li><a href="#api-key">Simple API-key auth</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">08</span><span class="navtitle">Async, Tasks &amp; Middleware</span></div><ul>
+<li><a href="#async">async def vs def — choose correctly</a></li>
+<li><a href="#background">Background tasks</a></li>
+<li><a href="#middleware-cors">Middleware &amp; CORS</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">09</span><span class="navtitle">Realtime &amp; Templates</span></div><ul>
+<li><a href="#websockets">WebSockets</a></li>
+<li><a href="#templates-static">Static files &amp; Jinja2 templates</a></li>
+<li><a href="#lifespan">Lifespan events (startup / shutdown)</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">10</span><span class="navtitle">Quality &amp; Production</span></div><ul>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#openapi">OpenAPI &amp; docs customization</a></li>
+<li><a href="#deploy">Deployment</a></li>
+<li><a href="#next">Best practices &amp; where to go next</a></li>
+</ul></div>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg class="bolt" style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#0B8076"/></svg> The complete field guide</span>
+      <h1>Build APIs <span class="fast">fast</span>,<br>from scratch to expert.</h1>
+      <p class="lede">Every core FastAPI concept in one page &mdash; explained plainly, shown with runnable code, and paired with something to try. Read top to bottom, or jump to what you need.</p>
+      <div class="hero-meta">
+        <span class="chip"><b>32</b> topics</span>
+        <span class="chip"><b>Pydantic v2</b> &middot; modern syntax</span>
+        <span class="chip"><b>Annotated</b> dependency style</span>
+        <span class="chip">copy-ready examples</span>
+      </div>
+      <div class="legend">
+        <span class="method get">GET</span><span class="method post">POST</span>
+        <span class="method put">PUT</span><span class="method patch">PATCH</span>
+        <span class="method delete">DELETE</span>
+      </div>
+    </header>
+
+    <section id="what" class="topic"><div class="topic-head"><h2>What FastAPI is, and why it wins</h2></div><p>FastAPI is a modern Python web framework for building APIs. You write ordinary Python functions, annotate the inputs with standard type hints, and FastAPI turns those hints into request parsing, validation, serialization, and live interactive documentation — for free.</p>
+<p>Three ideas power everything you will learn here:</p>
+<ul><li><b>Type hints are the contract.</b> A hint like <code>price: float</code> isn't a comment — FastAPI reads it to validate the request and document the endpoint.</li><li><b>It runs on ASGI.</b> FastAPI sits on Starlette (web layer) and Pydantic (data layer), so it speaks async natively and is genuinely fast.</li><li><b>The docs build themselves.</b> Every route you write appears in an interactive UI at <code>/docs</code> with no extra effort.</li></ul>
+<div class="callout note"><span class="callout-tag">Note</span><div>Mental model: a FastAPI app is a list of <b>path operations</b>. Each one binds an HTTP method + URL path to one Python function. Everything else — validation, auth, docs — hangs off that function's signature.</div></div></section>
+<section id="install" class="topic"><div class="topic-head"><h2>Install and set up your environment</h2></div><p>Always work inside a virtual environment so project dependencies stay isolated. The <code>[standard]</code> extra pulls in the server (Uvicorn) and common helpers.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash"># 1. Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# 2. Install FastAPI with the standard extras (includes uvicorn)
+pip install "fastapi[standard]"
+
+# 3. Confirm it's there
+python -c "import fastapi; print(fastapi.__version__)"</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Run <code>pip freeze &gt; requirements.txt</code> now. Pinning dependencies early saves you from “it worked yesterday” bugs later.</div></div></section>
+<section id="first" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Your first app</h2></div><p>Create a file called <code>main.py</code>. The variable <code>app</code> is the application; the <code>@app.get("/")</code> decorator registers a path operation for <code>GET /</code>.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello, FastAPI"}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}</code></pre></div>
+<p>Run it with the dev server (auto-reloads on save):</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">fastapi dev main.py
+# Then open:
+#   http://127.0.0.1:8000          -&gt; your JSON response
+#   http://127.0.0.1:8000/docs     -&gt; interactive Swagger UI
+#   http://127.0.0.1:8000/redoc    -&gt; alternative ReDoc docs</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Open <code>/docs</code>, expand the <code>GET /</code> endpoint, and click <b>Try it out → Execute</b>. You just called your API from a UI you never had to build.</div></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Returning a <code>dict</code> works because FastAPI serializes it to JSON automatically. You can also return Pydantic models, lists, or primitives.</div></div></section>
+<section id="methods" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Path operations &amp; HTTP methods</h2></div><p>Each HTTP method has a matching decorator. Use them to mean what they conventionally mean: GET reads, POST creates, PUT replaces, PATCH partially updates, DELETE removes.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/items")
+def list_items():
+    return ["pen", "notebook"]
+
+
+@app.post("/items")
+def create_item():
+    return {"created": True}
+
+
+@app.put("/items/{item_id}")
+def replace_item(item_id: int):
+    return {"replaced": item_id}
+
+
+@app.patch("/items/{item_id}")
+def update_item(item_id: int):
+    return {"patched": item_id}
+
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int):
+    return {"deleted": item_id}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add a <code>@app.get("/items/count")</code> endpoint. Watch how it appears in <code>/docs</code> automatically, grouped under the same path family.</div></div></section>
+<section id="path-params" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Path parameters</h2></div><p>Anything in curly braces in the path becomes a function argument. Add a type hint and FastAPI validates and converts it — a non-integer for <code>item_id: int</code> returns a clean 422 error, not a crash.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int):          # "/users/abc" -&gt; 422 validation error
+    return {"user_id": user_id, "type": str(type(user_id))}</code></pre></div>
+<h3>Order matters</h3>
+<p>Routes are matched top to bottom. Put fixed paths <i>before</i> parameterized ones, or the fixed path will never be reached.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">@app.get("/users/me")        # must come FIRST
+def get_current_user():
+    return {"user_id": "the current user"}
+
+
+@app.get("/users/{user_id}")  # otherwise "me" is read as a user_id
+def get_user(user_id: int):
+    return {"user_id": user_id}</code></pre></div>
+<h3>Restrict values with an Enum</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from enum import Enum
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+class ModelName(str, Enum):
+    alexnet = "alexnet"
+    resnet = "resnet"
+    lenet = "lenet"
+
+
+@app.get("/models/{name}")
+def get_model(name: ModelName):
+    return {"model": name, "value": name.value}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Hit <code>/models/banana</code>. FastAPI rejects it and — in <code>/docs</code> — renders a dropdown with only the three valid choices.</div></div></section>
+<section id="query-params" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Query parameters</h2></div><p>Function parameters that are <i>not</i> in the path become query parameters automatically. A default value makes them optional; no default makes them required.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+DB = [{"name": "pen"}, {"name": "notebook"}, {"name": "eraser"}]
+
+
+@app.get("/items")
+def list_items(skip: int = 0, limit: int = 10, q: str | None = None):
+    # /items?skip=1&amp;limit=2&amp;q=note
+    results = DB[skip : skip + limit]
+    if q:
+        results = [i for i in results if q in i["name"]]
+    return results</code></pre></div>
+<h3>Booleans and lists</h3>
+<p>FastAPI coerces query strings intelligently. <code>?active=1</code>, <code>?active=true</code>, and <code>?active=yes</code> all become <code>True</code>. Repeat a key to receive a list.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Query
+
+app = FastAPI()
+
+
+@app.get("/search")
+def search(
+    active: bool = False,                       # ?active=true
+    tags: Annotated[list[str], Query()] = [],   # ?tags=a&amp;tags=b
+):
+    return {"active": active, "tags": tags}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Call <code>/search?active=yes&tags=python&tags=web</code> and confirm the boolean and list both parse correctly.</div></div></section>
+<section id="body" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Request bodies with Pydantic</h2></div><p>To accept JSON, declare a parameter whose type is a Pydantic <code>BaseModel</code>. FastAPI reads the request body, validates every field against the model, and hands you a typed object.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+    description: str | None = None    # optional
+    in_stock: bool = True             # default
+
+
+@app.post("/items")
+def create_item(item: Item):
+    # `item` is a fully validated Item instance
+    total = item.price * 1.2          # add 20% tax
+    return {"item": item, "price_with_tax": round(total, 2)}</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">request</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-json">// Send this body to POST /items
+{
+  "name": "Keyboard",
+  "price": 49.99
+}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>POST a body where <code>price</code> is the string <code>"cheap"</code>. You'll get a precise 422 telling you which field failed and why.</div></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Pydantic v2 is the validation engine. The patterns below assume v2, which ships with current FastAPI.</div></div></section>
+<section id="pydantic" class="topic"><div class="topic-head"><h2>Pydantic models in depth</h2></div><p>Pydantic does far more than mark fields required. Use <code>Field</code> for per-field rules and <code>field_validator</code> for custom logic.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from datetime import datetime
+from pydantic import BaseModel, Field, EmailStr, field_validator
+
+
+class User(BaseModel):
+    username: str = Field(min_length=3, max_length=20)
+    email: EmailStr                                   # validates email format
+    age: int = Field(ge=0, le=120)                    # 0 &lt;= age &lt;= 120
+    bio: str = Field(default="", max_length=500)
+    signup_at: datetime = Field(default_factory=datetime.utcnow)
+
+    @field_validator("username")
+    @classmethod
+    def no_spaces(cls, v: str) -&gt; str:
+        if " " in v:
+            raise ValueError("username cannot contain spaces")
+        return v.lower()</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div><code>EmailStr</code> needs <code>pip install "pydantic[email]"</code>. The <code>@classmethod</code> on validators is required in Pydantic v2.</div></div>
+<h3>Nested models</h3>
+<p>Models can contain other models. FastAPI validates the whole tree and documents it.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from pydantic import BaseModel
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    zip_code: str
+
+
+class Customer(BaseModel):
+    name: str
+    addresses: list[Address]          # a list of nested models
+
+
+@app.post("/customers")
+def create_customer(customer: Customer):
+    return {"cities": [a.city for a in customer.addresses]}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add a <code>@field_validator("zip_code")</code> to <code>Address</code> that rejects anything that isn't 5 digits.</div></div></section>
+<section id="validation" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Validating query, path &amp; body metadata</h2></div><p>Wrap a parameter's type in <code>Annotated[...]</code> with <code>Query</code>, <code>Path</code>, or <code>Body</code> to attach constraints, docs, and examples — the modern, recommended style.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Query, Path
+
+app = FastAPI()
+
+
+@app.get("/products/{product_id}")
+def get_product(
+    product_id: Annotated[int, Path(ge=1, description="Positive product id")],
+    q: Annotated[
+        str | None,
+        Query(min_length=3, max_length=50, description="Search term"),
+    ] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+):
+    return {"product_id": product_id, "q": q, "page": page}</code></pre></div>
+<ul><li><code>ge</code> / <code>gt</code> / <code>le</code> / <code>lt</code> — numeric bounds.</li><li><code>min_length</code> / <code>max_length</code> — string length.</li><li><code>pattern</code> — a regex the value must match.</li><li><code>description</code> / <code>title</code> / <code>examples</code> — show up in <code>/docs</code>.</li></ul>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add <code>pattern=r"^[a-z]+$"</code> to <code>q</code> and watch <code>/docs</code> document the rule and the server enforce it.</div></div></section>
+<section id="forms-files" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Form data &amp; file uploads</h2></div><p>HTML forms and file uploads use a different content type than JSON. Use <code>Form</code> for fields and <code>UploadFile</code> for files. (Requires <code>python-multipart</code>, included in <code>[standard]</code>.)</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Form, UploadFile, File
+
+app = FastAPI()
+
+
+@app.post("/login")
+def login(
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+):
+    return {"user": username}
+
+
+@app.post("/upload")
+async def upload(file: UploadFile, note: Annotated[str, Form()] = ""):
+    contents = await file.read()           # bytes
+    return {
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size_bytes": len(contents),
+        "note": note,
+    }
+
+
+@app.post("/upload-many")
+async def upload_many(files: list[UploadFile]):
+    return {"count": len(files), "names": [f.filename for f in files]}</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div><code>UploadFile</code> streams to a temp file, so large uploads don't exhaust memory. Use <code>await file.read()</code> in an <code>async</code> function.</div></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Use the <code>/docs</code> file picker on <code>/upload</code> to send a real image and inspect the reported size and content type.</div></div></section>
+<section id="headers-cookies" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Headers &amp; cookies</h2></div><p>Read request headers and cookies by declaring them with <code>Header</code> and <code>Cookie</code>. Header names with hyphens map to underscores automatically (<code>User-Agent</code> → <code>user_agent</code>).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Header, Cookie
+
+app = FastAPI()
+
+
+@app.get("/inspect")
+def inspect(
+    user_agent: Annotated[str | None, Header()] = None,
+    x_request_id: Annotated[str | None, Header()] = None,  # reads X-Request-ID
+    session: Annotated[str | None, Cookie()] = None,
+):
+    return {
+        "user_agent": user_agent,
+        "request_id": x_request_id,
+        "session": session,
+    }</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Set a response cookie too: return a <code>JSONResponse</code> and call <code>response.set_cookie("session", "abc123")</code> on it.</div></div></section>
+<section id="response-model" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Response models</h2></div><p>Declare <code>response_model</code> to control what the client receives. FastAPI filters the output to the model's shape — perfect for hiding fields like password hashes.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel, EmailStr
+
+app = FastAPI()
+
+
+class UserIn(BaseModel):
+    username: str
+    email: EmailStr
+    password: str          # accepted on input...
+
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr        # ...but password is NOT in the output model
+
+
+@app.post("/users", response_model=UserOut)
+def create_user(user: UserIn):
+    # Even though we return the full object, FastAPI strips `password`
+    return user</code></pre></div>
+<ul><li><code>response_model_exclude_unset=True</code> — omit fields that kept their default.</li><li><code>response_model_exclude={"email"}</code> — drop specific fields.</li></ul>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Return the full <code>UserIn</code> object and confirm the password never reaches the client — the response model is the gatekeeper.</div></div></section>
+<section id="status-codes" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Status codes</h2></div><p>Set the default success code per route with <code>status_code</code>. Use the <code>status</code> module instead of magic numbers.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, status
+
+app = FastAPI()
+
+
+@app.post("/items", status_code=status.HTTP_201_CREATED)
+def create_item():
+    return {"created": True}
+
+
+@app.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_item(item_id: int):
+    return None        # 204 means "no body"</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Need a dynamic code? Inject the <code>Response</code> object and set <code>response.status_code</code> inside the function.</div></div></section>
+<section id="errors" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Error handling</h2></div><p>Raise <code>HTTPException</code> to return a controlled error. The <code>detail</code> becomes the JSON error body.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, HTTPException, status
+
+app = FastAPI()
+DB = {1: "pen", 2: "notebook"}
+
+
+@app.get("/items/{item_id}")
+def get_item(item_id: int):
+    if item_id not in DB:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Item {item_id} not found",
+            headers={"X-Error": "ItemMissing"},
+        )
+    return {"item": DB[item_id]}</code></pre></div>
+<h3>Custom exception handlers</h3>
+<p>Translate your own exceptions into clean responses app-wide.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+
+class OutOfStock(Exception):
+    def __init__(self, sku: str):
+        self.sku = sku
+
+
+@app.exception_handler(OutOfStock)
+def out_of_stock_handler(request: Request, exc: OutOfStock):
+    return JSONResponse(
+        status_code=409,
+        content={"error": f"{exc.sku} is out of stock"},
+    )
+
+
+@app.post("/buy/{sku}")
+def buy(sku: str):
+    raise OutOfStock(sku)        # caught by the handler above</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add a handler for Pydantic's <code>RequestValidationError</code> to reshape 422 responses into your own format.</div></div></section>
+<section id="custom-responses" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Custom response types</h2></div><p>Return more than JSON when you need to: HTML, redirects, files, or streams. Import the response classes from <code>fastapi.responses</code>.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse,
+    PlainTextResponse,
+    StreamingResponse,
+)
+
+app = FastAPI()
+
+
+@app.get("/page", response_class=HTMLResponse)
+def page():
+    return "&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;Rendered as HTML.&lt;/p&gt;"
+
+
+@app.get("/old")
+def old():
+    return RedirectResponse(url="/page", status_code=307)
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots():
+    return "User-agent: *\nDisallow:"
+
+
+@app.get("/stream")
+def stream():
+    def generate():
+        for i in range(5):
+            yield f"chunk {i}\n"
+    return StreamingResponse(generate(), media_type="text/plain")</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Build a <code>StreamingResponse</code> that yields rows from a large CSV so the client starts receiving data immediately.</div></div></section>
+<section id="depends" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Dependency injection</h2></div><p>Dependencies are reusable functions whose results FastAPI injects into your routes. Declare them with <code>Depends</code>. This is the backbone of clean FastAPI code: shared logic in one place, requested by signature.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Depends
+
+app = FastAPI()
+
+
+# A dependency is just a callable.
+def pagination(skip: int = 0, limit: int = 10):
+    return {"skip": skip, "limit": limit}
+
+
+Pagination = Annotated[dict, Depends(pagination)]   # reusable alias
+
+
+@app.get("/items")
+def list_items(page: Pagination):
+    return {"querying": page}
+
+
+@app.get("/users")
+def list_users(page: Pagination):     # same logic, zero duplication
+    return {"querying": page}</code></pre></div>
+<h3>Classes as dependencies</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+
+class CommonParams:
+    def __init__(self, q: str | None = None, limit: int = 10):
+        self.q = q
+        self.limit = limit
+
+
+@app.get("/search")
+def search(params: Annotated[CommonParams, Depends()]):
+    return {"q": params.q, "limit": params.limit}</code></pre></div>
+<h3>Sub-dependencies</h3>
+<p>A dependency can itself depend on others. FastAPI resolves the whole graph and caches each dependency per request.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import Depends, Header, HTTPException
+
+
+def get_token(x_token: Annotated[str | None, Header()] = None) -&gt; str:
+    if not x_token:
+        raise HTTPException(401, "Missing X-Token header")
+    return x_token
+
+
+def get_current_user(token: Annotated[str, Depends(get_token)]) -&gt; dict:
+    # token is resolved first, then passed in here
+    return {"id": 1, "token": token}
+
+
+@app.get("/me")
+def me(user: Annotated[dict, Depends(get_current_user)]):
+    return user</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add the dependency at the router or app level via <code>dependencies=[Depends(get_token)]</code> to enforce it everywhere without naming it in each function.</div></div></section>
+<section id="yield-deps" class="topic"><div class="topic-head"><h2>Dependencies with yield (cleanup)</h2></div><p>A dependency that <code>yield</code>s can run setup, hand over a value, and run teardown afterward — the canonical pattern for opening and closing a database session per request.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated, Generator
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+
+def get_db() -&gt; Generator:
+    db = {"connection": "open"}      # imagine SessionLocal()
+    print("open db")
+    try:
+        yield db                     # value handed to the route
+    finally:
+        print("close db")           # always runs, even on error
+
+
+@app.get("/items")
+def list_items(db: Annotated[dict, Depends(get_db)]):
+    return {"db_state": db["connection"]}</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Code after <code>yield</code> runs once the response is sent. Always wrap it in <code>try/finally</code> so cleanup happens even when the route raises.</div></div></section>
+<section id="routers" class="topic"><div class="topic-head"><h2>Bigger apps: APIRouter &amp; structure</h2></div><p>Splitting one giant <code>main.py</code> into routers keeps a growing app sane. Each domain gets its own module with an <code>APIRouter</code>; <code>main.py</code> stitches them together.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># app/routers/items.py
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/items", tags=["items"])
+
+
+@router.get("")
+def list_items():
+    return ["pen", "notebook"]
+
+
+@router.get("/{item_id}")
+def get_item(item_id: int):
+    return {"item_id": item_id}</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># app/main.py
+from fastapi import FastAPI
+from app.routers import items, users
+
+app = FastAPI(title="My Store API")
+
+app.include_router(items.router)
+app.include_router(users.router)
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}</code></pre></div>
+<h3>A sensible layout</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">app/
+├─ main.py            # creates FastAPI(), includes routers
+├─ config.py          # Settings (env vars)
+├─ database.py        # engine / session
+├─ models.py          # ORM / table models
+├─ schemas.py         # Pydantic request/response models
+├─ dependencies.py    # shared Depends() functions
+└─ routers/
+   ├─ items.py
+   └─ users.py</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Give each router its own <code>tags=[...]</code>. The <code>/docs</code> page groups endpoints by tag, so your API self-organizes.</div></div></section>
+<section id="settings" class="topic"><div class="topic-head"><h2>Settings &amp; configuration</h2></div><p>Never hardcode secrets. <code>pydantic-settings</code> reads configuration from environment variables (and a <code>.env</code> file) into a typed, validated object.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install pydantic-settings</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># config.py
+from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    app_name: str = "My API"
+    database_url: str
+    secret_key: str
+    debug: bool = False
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+@lru_cache                  # build once, reuse everywhere
+def get_settings() -&gt; Settings:
+    return Settings()</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># main.py
+from typing import Annotated
+from fastapi import Depends, FastAPI
+from config import Settings, get_settings
+
+app = FastAPI()
+
+
+@app.get("/info")
+def info(settings: Annotated[Settings, Depends(get_settings)]):
+    return {"app": settings.app_name, "debug": settings.debug}</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">request</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-json"># .env file (never commit this)
+DATABASE_URL=postgresql://user:pass@localhost/db
+SECRET_KEY=super-secret-change-me
+DEBUG=true</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Because <code>get_settings</code> is a dependency, you can override it in tests with <code>app.dependency_overrides</code>.</div></div></section>
+<section id="database" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Database CRUD with SQLModel</h2></div><p>SQLModel (by FastAPI's author) unifies your table model and your Pydantic model. One class is both an ORM table and a validated schema.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install sqlmodel</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># database.py
+from sqlmodel import SQLModel, create_engine, Session
+
+engine = create_engine("sqlite:///app.db", echo=True)
+
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># models.py
+from sqlmodel import SQLModel, Field
+
+
+class Hero(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    secret_name: str
+    age: int | None = None</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># main.py
+from typing import Annotated
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends, HTTPException
+from sqlmodel import Session, select
+
+from database import engine, init_db, get_session
+from models import Hero
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()            # create tables on startup
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+DbSession = Annotated[Session, Depends(get_session)]
+
+
+@app.post("/heroes", response_model=Hero)
+def create_hero(hero: Hero, session: DbSession):
+    session.add(hero)
+    session.commit()
+    session.refresh(hero)        # populate the new id
+    return hero
+
+
+@app.get("/heroes", response_model=list[Hero])
+def list_heroes(session: DbSession, offset: int = 0, limit: int = 20):
+    return session.exec(select(Hero).offset(offset).limit(limit)).all()
+
+
+@app.get("/heroes/{hero_id}", response_model=Hero)
+def get_hero(hero_id: int, session: DbSession):
+    hero = session.get(Hero, hero_id)
+    if not hero:
+        raise HTTPException(404, "Hero not found")
+    return hero
+
+
+@app.delete("/heroes/{hero_id}")
+def delete_hero(hero_id: int, session: DbSession):
+    hero = session.get(Hero, hero_id)
+    if not hero:
+        raise HTTPException(404, "Hero not found")
+    session.delete(hero)
+    session.commit()
+    return {"deleted": hero_id}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add a <code>PATCH /heroes/{id}</code> route. Read the hero, apply only the fields the client sent (use <code>hero_update.model_dump(exclude_unset=True)</code>), then commit.</div></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>For high-concurrency production apps, look at the async engine (<code>create_async_engine</code>) with <code>asyncpg</code>. The synchronous version above is perfect for learning and many real apps.</div></div></section>
+<section id="oauth2-jwt" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>OAuth2 password flow + JWT</h2></div><p>This is the standard token login for FastAPI: the user posts a username and password, you verify them, and you return a signed JWT the client sends back on every protected request.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install "passlib[bcrypt]" "python-jose[cryptography]"</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
+SECRET_KEY = "change-me-to-a-long-random-string"
+ALGORITHM = "HS256"
+EXPIRE_MINUTES = 30
+
+app = FastAPI()
+pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# Pretend DB; password is the bcrypt hash of "secret"
+FAKE_USERS = {
+    "alice": {"username": "alice", "hashed": pwd.hash("secret")},
+}
+
+
+def authenticate(username: str, password: str):
+    user = FAKE_USERS.get(username)
+    if not user or not pwd.verify(password, user["hashed"]):
+        return None
+    return user
+
+
+def create_token(data: dict) -&gt; str:
+    payload = data.copy()
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(minutes=EXPIRE_MINUTES)
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+@app.post("/token")
+def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    user = authenticate(form.username, form.password)
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad credentials")
+    return {"access_token": create_token({"sub": user["username"]}),
+            "token_type": "bearer"}
+
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    creds_error = HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        "Invalid token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+    except JWTError:
+        raise creds_error
+    user = FAKE_USERS.get(username)
+    if not user:
+        raise creds_error
+    return user
+
+
+@app.get("/me")
+def read_me(user: Annotated[dict, Depends(get_current_user)]):
+    return {"username": user["username"]}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Open <code>/docs</code>. Because you used <code>OAuth2PasswordBearer</code>, an <b>Authorize</b> button appears — log in as <code>alice</code> / <code>secret</code>, then call <code>/me</code>.</div></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Hash passwords with bcrypt, never store plaintext. Keep <code>SECRET_KEY</code> out of code (load it from settings) and rotate it if leaked.</div></div></section>
+<section id="api-key" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Simple API-key auth</h2></div><p>For service-to-service calls, a header API key is often enough. Enforce it with a dependency — reuse it per-route or app-wide.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Annotated
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import APIKeyHeader
+
+app = FastAPI()
+api_key_header = APIKeyHeader(name="X-API-Key")
+VALID_KEYS = {"key-123", "key-456"}
+
+
+def require_api_key(key: Annotated[str, Depends(api_key_header)]):
+    if key not in VALID_KEYS:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Invalid API key")
+    return key
+
+
+@app.get("/private", dependencies=[Depends(require_api_key)])
+def private():
+    return {"data": "secret"}</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Call <code>/private</code> without the <code>X-API-Key</code> header (403), then with a valid one (200).</div></div></section>
+<section id="async" class="topic"><div class="topic-head"><h2>async def vs def — choose correctly</h2></div><p>FastAPI supports both. The rule is about <i>what the function does</i>, not preference:</p>
+<ul><li>Use <code>async def</code> when you <code>await</code> non-blocking I/O (async DB drivers, <code>httpx.AsyncClient</code>, async queues).</li><li>Use plain <code>def</code> when you call blocking libraries (most ORMs, <code>requests</code>, file I/O). FastAPI runs these in a threadpool so they don't block the event loop.</li><li>The cardinal sin: calling a <b>blocking</b> function inside <code>async def</code> — it freezes the whole server.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import asyncio
+import time
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/async-good")
+async def async_good():
+    await asyncio.sleep(1)        # non-blocking: server stays responsive
+    return {"ok": True}
+
+
+@app.get("/sync-good")
+def sync_good():
+    time.sleep(1)                 # blocking, but runs in a threadpool -&gt; fine
+    return {"ok": True}
+
+
+@app.get("/async-bad")
+async def async_bad():
+    time.sleep(1)                 # BLOCKING inside async -&gt; freezes everything
+    return {"ok": False}</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>When unsure, use plain <code>def</code>. FastAPI handles the threadpool for you, and it's the safe default.</div></div></section>
+<section id="background" class="topic"><div class="topic-head"><span class="method post">POST</span><h2>Background tasks</h2></div><p>Return the response immediately and finish slow work afterward — sending email, writing logs — with <code>BackgroundTasks</code>.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, BackgroundTasks
+
+app = FastAPI()
+
+
+def write_log(message: str):
+    with open("app.log", "a") as f:
+        f.write(message + "\n")
+
+
+@app.post("/signup")
+def signup(email: str, tasks: BackgroundTasks):
+    tasks.add_task(write_log, f"new signup: {email}")
+    return {"message": "Check your inbox"}     # returns before the log writes</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>BackgroundTasks run in the same process — great for quick jobs. For heavy or retryable work, reach for Celery, ARQ, or a real task queue.</div></div></section>
+<section id="middleware-cors" class="topic"><div class="topic-head"><h2>Middleware &amp; CORS</h2></div><p>Middleware wraps every request/response. The most common need is CORS — letting a browser frontend on another origin call your API.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://myfrontend.com", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)</code></pre></div>
+<h3>Custom middleware</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import time
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+
+@app.middleware("http")
+async def add_timing_header(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)        # run the route
+    response.headers["X-Process-Time"] = f"{time.perf_counter() - start:.4f}"
+    return response</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Hit any endpoint and inspect the response headers — your <code>X-Process-Time</code> is now on every response.</div></div></section>
+<section id="websockets" class="topic"><div class="topic-head"><h2>WebSockets</h2></div><p>FastAPI speaks WebSockets for realtime, bidirectional communication — chat, live dashboards, notifications.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+
+app = FastAPI()
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(ws: WebSocket):
+    await ws.accept()
+    try:
+        while True:
+            text = await ws.receive_text()
+            await ws.send_text(f"echo: {text}")
+    except WebSocketDisconnect:
+        print("client disconnected")</code></pre></div>
+<h3>A tiny broadcast manager</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">class ConnectionManager:
+    def __init__(self):
+        self.active: list[WebSocket] = []
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.append(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.active.remove(ws)
+
+    async def broadcast(self, message: str):
+        for ws in self.active:
+            await ws.send_text(message)
+
+
+manager = ConnectionManager()
+
+
+@app.websocket("/chat")
+async def chat(ws: WebSocket):
+    await manager.connect(ws)
+    try:
+        while True:
+            msg = await ws.receive_text()
+            await manager.broadcast(msg)
+    except WebSocketDisconnect:
+        manager.disconnect(ws)</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Open two browser tabs with a tiny JS <code>new WebSocket("ws://localhost:8000/chat")</code> client and watch messages broadcast between them.</div></div></section>
+<section id="templates-static" class="topic"><div class="topic-head"><span class="method get">GET</span><h2>Static files &amp; Jinja2 templates</h2></div><p>FastAPI can also serve a server-rendered website: mount a static directory and render HTML templates with Jinja2.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install jinja2</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/welcome", response_class=HTMLResponse)
+def welcome(request: Request, name: str = "friend"):
+    return templates.TemplateResponse(
+        request=request,
+        name="welcome.html",
+        context={"name": name},
+    )</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">template.html</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-html">&lt;!-- templates/welcome.html --&gt;
+&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;&lt;link rel="stylesheet" href="/static/style.css"&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello, {{ name }}!&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Add <code>{% for item in items %}</code> loops to the template and pass a list in the <code>context</code>.</div></div></section>
+<section id="lifespan" class="topic"><div class="topic-head"><h2>Lifespan events (startup / shutdown)</h2></div><p>Run code once when the app boots and once when it stops — connect a database pool, warm a cache, load an ML model. The modern API is <code>lifespan</code> (it replaced the old <code>@app.on_event</code>).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from contextlib import asynccontextmanager
+from fastapi import FastAPI
+
+ml_models = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- startup ---
+    ml_models["model"] = lambda x: x * 2     # imagine loading a real model
+    print("startup complete")
+    yield
+    # --- shutdown ---
+    ml_models.clear()
+    print("shutdown complete")
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/predict")
+def predict(value: int):
+    return {"result": ml_models["model"](value)}</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>Everything before <code>yield</code> runs at startup; everything after runs at shutdown. Resources loaded here are available to all routes.</div></div></section>
+<section id="testing" class="topic"><div class="topic-head"><h2>Testing</h2></div><p>FastAPI ships a <code>TestClient</code> (built on <code>httpx</code>) so you can test endpoints in-process — no running server needed. Pair it with pytest.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install pytest httpx</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># test_main.py
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+
+def test_root():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Hello, FastAPI"}
+
+
+def test_create_item():
+    response = client.post("/items", json={"name": "Pen", "price": 1.5})
+    assert response.status_code == 201
+    assert response.json()["name"] == "Pen"
+
+
+def test_validation_error():
+    response = client.post("/items", json={"name": "Pen"})   # missing price
+    assert response.status_code == 422</code></pre></div>
+<h3>Overriding dependencies in tests</h3>
+<p>Swap real dependencies (a database, settings) for fakes without touching app code.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from main import app, get_db
+
+
+def fake_db():
+    return {"connection": "in-memory test db"}
+
+
+app.dependency_overrides[get_db] = fake_db     # now tests use the fake
+# ... run tests ...
+app.dependency_overrides.clear()</code></pre></div>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Run <code>pytest -v</code>. Then break a route on purpose and watch the failing test point you straight at it.</div></div></section>
+<section id="openapi" class="topic"><div class="topic-head"><h2>OpenAPI &amp; docs customization</h2></div><p>Your docs are generated from an OpenAPI schema you can shape: app metadata, per-route summaries, tags, deprecation, and example payloads.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">main.py</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI(
+    title="Store API",
+    description="A demo API for the FastAPI guide.",
+    version="1.2.0",
+    contact={"name": "API Team", "email": "api@example.com"},
+)
+
+
+class Item(BaseModel):
+    name: str = Field(examples=["Wireless Mouse"])
+    price: float = Field(examples=[29.99])
+
+
+@app.post(
+    "/items",
+    tags=["items"],
+    summary="Create an item",
+    description="Adds a new item to the catalogue and returns it.",
+    response_description="The created item",
+)
+def create_item(item: Item):
+    return item
+
+
+@app.get("/legacy", deprecated=True)
+def legacy():
+    return {"note": "use /items instead"}</code></pre></div>
+<div class="callout note"><span class="callout-tag">Note</span><div>The raw schema lives at <code>/openapi.json</code>. Point client generators, Postman, or other tools at it to scaffold SDKs automatically.</div></div></section>
+<section id="deploy" class="topic"><div class="topic-head"><h2>Deployment</h2></div><p>In development you use <code>fastapi dev</code>. In production, run an ASGI server explicitly and put it behind a reverse proxy (Nginx, a load balancer, or your platform's router).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash"># Production server (multiple worker processes)
+fastapi run main.py --workers 4
+
+# Equivalent with uvicorn directly
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4</code></pre></div>
+<h3>Dockerfile</h3>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">FROM python:3.12-slim
+
+WORKDIR /code
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app ./app
+
+EXPOSE 8000
+CMD ["fastapi", "run", "app/main.py", "--port", "8000"]</code></pre></div>
+<ul><li>Set the worker count near your CPU core count; measure, don't guess.</li><li>Terminate TLS at the proxy and pass <code>--proxy-headers</code> so FastAPI sees the real client scheme and IP.</li><li>Load secrets from the environment, run with <code>DEBUG=false</code>, and ship structured logs.</li><li>Add a <code>/health</code> endpoint for load-balancer and container health checks.</li></ul>
+<div class="callout try"><span class="callout-tag">Try it</span><div>Build the image and run it: <code>docker build -t myapi . &amp;&amp; docker run -p 8000:8000 myapi</code>, then open <code>/docs</code> on the running container.</div></div></section>
+<section id="next" class="topic"><div class="topic-head"><h2>Best practices &amp; where to go next</h2></div><p>You've covered the full surface of FastAPI. The habits that separate solid APIs from fragile ones:</p>
+<ul><li><b>Separate input and output schemas.</b> A <code>UserCreate</code> is not a <code>UserPublic</code>. Keep them distinct.</li><li><b>Push shared logic into dependencies.</b> Auth, pagination, DB sessions — declare them, don't repeat them.</li><li><b>Validate at the edge.</b> Let Pydantic reject bad data before it reaches your business logic.</li><li><b>Type everything.</b> The richer your hints, the better your validation, docs, and editor support.</li><li><b>Test the contract.</b> A <code>TestClient</code> test per route catches regressions cheaply.</li><li><b>Keep secrets in the environment</b> and never commit your <code>.env</code>.</li></ul>
+<div class="callout note"><span class="callout-tag">Note</span><div>Read next: the official docs at <b>fastapi.tiangolo.com</b> (the tutorial and “Advanced User Guide”), plus the SQLModel and Starlette docs for the layers beneath FastAPI.</div></div>
+<p>Now build something. The fastest way to cement all of this is to ship a small real API — a URL shortener, a notes service, a task tracker — end to end, with auth, a database, and tests.</p></section>
+
+    <footer>
+      <svg class="bolt" style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#13B5A6"/></svg>
+      Built as a self-contained study guide. Pair it with the official docs at fastapi.tiangolo.com.
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script>
+(function(){
+  // syntax highlight (guard against CDN failure)
+  if (window.hljs){ document.querySelectorAll('pre code').forEach(function(b){ try{ hljs.highlightElement(b);}catch(e){} }); }
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.closest('.codewrap').querySelector('code');
+      var text = code.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent='Copied'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent='Copy'; btn.classList.remove('done'); }, 1400);
+      }).catch(function(){ btn.textContent='Press Ctrl+C'; });
+    });
+  });
+
+  // progress bar + nav fill
+  var bar=document.getElementById('progress');
+  var navFill=document.getElementById('navFill');
+  var pctLabel=document.getElementById('pctLabel');
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    var pct=max>0?(h.scrollTop/max):0;
+    bar.style.width=(pct*100)+'%';
+    navFill.style.width=(pct*100)+'%';
+    pctLabel.textContent=Math.round(pct*100)+'%';
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // scroll-spy
+  var links=Array.prototype.slice.call(document.querySelectorAll('.sidebar a'));
+  var map={};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)]=a; });
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        links.forEach(function(l){ l.classList.remove('active'); });
+        var a=map[en.target.id];
+        if(a){ a.classList.add('active');
+          a.scrollIntoView({block:'nearest'});
+        }
+      }
+    });
+  }, {rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){ obs.observe(s); });
+
+  // mobile nav
+  var sb=document.getElementById('sidebar'), scrim=document.getElementById('scrim'),
+      menuBtn=document.getElementById('menuBtn');
+  function toggle(open){ sb.classList.toggle('open',open); scrim.classList.toggle('show',open); }
+  if(menuBtn){ menuBtn.addEventListener('click', function(){ toggle(!sb.classList.contains('open')); }); }
+  scrim.addEventListener('click', function(){ toggle(false); });
+  sb.addEventListener('click', function(e){ if(e.target.tagName==='A'){ toggle(false); } });
+})();
+</script>
+</body>
+</html>

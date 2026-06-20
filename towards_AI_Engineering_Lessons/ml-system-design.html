@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML System Design for senior engineers</title>
+<meta name="description" content="Design end-to-end AI systems: requirements, architecture, scaling, reliability, cost, and worked examples (RAG, recsys).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#F43F5E; --accent-deep:#BE123C; --accent-soft:#FCE4E9;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>ML System Design</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">SD</span> ML System Design</div>
+      <div class="tag">architecture · trade-offs</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">The approach</span></div><ul>
+<li><a href="#framework">A framework for ML system design</a></li>
+<li><a href="#requirements">Requirements &amp; framing</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Architecture</span></div><ul>
+<li><a href="#components">The anatomy of an ML system</a></li>
+<li><a href="#online-batch">Online vs batch &amp; latency budgets</a></li>
+<li><a href="#scale">Scaling &amp; performance</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Senior concerns</span></div><ul>
+<li><a href="#reliability">Reliability &amp; graceful degradation</a></li>
+<li><a href="#cost">Cost engineering</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Worked examples</span></div><ul>
+<li><a href="#rag-system">Design: a RAG knowledge assistant</a></li>
+<li><a href="#recsys">Design: a recommendation feed</a></li>
+<li><a href="#interview">What separates a senior answer</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="#F43F5E"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="#F43F5E"/><rect x="8.5" y="14" width="7" height="7" rx="1.5" fill="#F43F5E"/></svg> ML system design</span>
+      <h1>ML System Design,<br>think like a <span class="hl">senior engineer</span>.</h1>
+      <p class="lede">The skill that defines seniority: designing complete AI systems under real constraints — latency, scale, reliability, cost — and defending every trade-off. The framework, the patterns, and worked examples.</p>
+      <div class="hero-meta"><span class="chip">architecture</span><span class="chip">trade-offs</span><span class="chip">worked examples</span><span class="chip">10 topics</span></div>
+    </header>
+    <section id="framework" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>A framework for ML system design</h2></div><p>Senior engineers are paid to design whole systems under real constraints, not to know one more algorithm. The same applies in interviews. Use a consistent structure so you never freeze in front of a blank whiteboard.</p>
+<ul><li><b>1. Clarify</b> — turn the vague ask into concrete requirements and scale numbers.</li><li><b>2. Frame as ML</b> — what's predicted, what's the label, what's the metric, what's the baseline?</li><li><b>3. Data</b> — sources, labels, features, freshness, volume.</li><li><b>4. Architecture</b> — the components and how data flows through them.</li><li><b>5. Scale &amp; serve</b> — online vs batch, latency, throughput, caching.</li><li><b>6. Reliability, monitoring, cost</b> — how it stays up, healthy, and affordable.</li><li><b>7. Trade-offs</b> — name what you'd do differently with more time/budget/data.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Interviewers (and real stakeholders) care more about <i>how you reason through trade-offs</i> than about the 'right' answer. Think out loud; state assumptions explicitly.</div></div></section>
+<section id="requirements" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Requirements &amp; framing</h2></div><p>Most weak designs fail here: jumping to a model before pinning down what success means. Separate functional from non-functional requirements and put numbers on everything.</p>
+<ul><li><b>Functional</b> — what must it do? (e.g. 'recommend 10 items', 'answer from our docs with citations').</li><li><b>Non-functional</b> — latency target (p99), throughput (QPS), availability, freshness, budget.</li><li><b>Scale math</b> — users × requests × size = QPS and storage. Do the arithmetic out loud.</li><li><b>The metric</b> — the offline metric you optimize <i>and</i> the online/business metric that actually matters.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Always ask for numbers: 'How many users? What p99 latency is acceptable? How fresh must predictions be?' The architecture changes completely at 100 vs 100M users.</div></div></section>
+<section id="components" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>The anatomy of an ML system</h2></div><p>Most production ML systems share the same skeleton. Learn it once and adapt it to any problem.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">        +-----------+      +-------------+      +--------------+
+ data -&gt;| ingestion |-----&gt;| feature     |-----&gt;| training     |
+        | pipeline  |      | store       |      | pipeline     |
+        +-----------+      +------+------+      +------+-------+
+                                  |                    |
+                                  v                    v
+                           +------+------+      +------+-------+
+            request -----&gt; | inference   |&lt;-----| model       |
+                           | service     |      | registry    |
+            response &lt;-----+------+------+      +-------------+
+                                  |
+                                  v
+                           +------+------+
+                           | monitoring  | -&gt; drift / quality alerts
+                           +-------------+</code></pre></div>
+<ul><li><b>Offline path</b> — ingest → features → train → evaluate → register.</li><li><b>Online path</b> — request → fetch features → model → post-process → response.</li><li><b>Shared</b> — the feature store and registry connect both, preventing training/serving skew.</li></ul></section>
+<section id="online-batch" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Online vs batch &amp; latency budgets</h2></div><p>The first big fork: must predictions be computed per request, or can they be precomputed? This single choice reshapes the whole design.</p>
+<ul><li><b>Batch</b> — precompute predictions on a schedule, store them, serve via lookup. Cheap, simple, but stale. Good for daily recommendations, risk scores.</li><li><b>Online</b> — compute per request. Fresh, but you own latency and scaling. Required for search, fraud, chat.</li><li><b>Hybrid</b> — precompute candidates in batch, rank online. The standard for large recommender/search systems.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Budget your latency: if p99 must be 200ms and the model takes 80ms, you have 120ms left for feature lookup, network, and post-processing. Design within the budget from the start.</div></div></section>
+<section id="scale" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Scaling &amp; performance</h2></div><p>Once one instance works, the question is how to handle 1000× the load without 1000× the cost or latency.</p>
+<ul><li><b>Horizontal scaling</b> — many stateless inference replicas behind a load balancer; autoscale on traffic.</li><li><b>Caching</b> — cache predictions/embeddings for repeated inputs; often the biggest single win.</li><li><b>Async &amp; queues</b> — decouple slow work; absorb spikes with a queue instead of dropping requests.</li><li><b>Model optimization</b> — quantization, distillation, batching, GPU sharing to cut per-request cost.</li><li><b>Approximate methods</b> — ANN indexes (FAISS, HNSW) for vector search at scale instead of exact kNN.</li></ul></section>
+<section id="reliability" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Reliability &amp; graceful degradation</h2></div><p>At scale, failures are constant, not exceptional. A senior design assumes components <i>will</i> fail and stays useful anyway.</p>
+<ul><li><b>Redundancy</b> — no single point of failure; multi-AZ, replicas.</li><li><b>Graceful degradation</b> — if the model times out, fall back to a simpler model, a cached result, or a sensible default. Never hard-fail the user.</li><li><b>Circuit breakers &amp; timeouts</b> — stop hammering a failing dependency; fail fast.</li><li><b>Idempotency &amp; retries</b> — safe to retry without double-processing.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>'What happens when the model service is down?' is a senior-defining question. The answer should never be 'the product breaks' — it should be a defined fallback.</div></div></section>
+<section id="cost" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Cost engineering</h2></div><p>At scale, cost is a first-class design constraint — especially with LLMs, where a careless design can be 100× more expensive than a careful one for the same quality.</p>
+<ul><li><b>Right-size the model</b> — use the smallest model that meets the quality bar; route easy cases to cheaper models.</li><li><b>Cache aggressively</b> — repeated queries shouldn't pay twice.</li><li><b>Trim compute</b> — shorter prompts/contexts, batching, quantization, spot instances for training.</li><li><b>Measure cost per request</b> — make it a tracked metric, like latency.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Frame trade-offs as a triangle: quality vs latency vs cost. You usually optimize two and accept the third. Say which, and why, for the given product.</div></div></section>
+<section id="rag-system" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>Design: a RAG knowledge assistant</h2></div><p>'Build a chatbot over our company's 100k documents.' Walk the framework:</p>
+<ul><li><b>Requirements</b> — grounded answers with citations, p99 &lt; 3s, ~50 QPS, docs update daily.</li><li><b>Offline</b> — ingest docs → chunk → embed → vector DB; re-index on change. Version the index.</li><li><b>Online</b> — embed query → hybrid retrieve top-20 → rerank to top-4 → LLM with context → validate citations.</li><li><b>Scale/cost</b> — cache embeddings and frequent answers; route to a smaller model when confidence is high.</li><li><b>Reliability</b> — if retrieval fails, say 'I couldn't find that' rather than hallucinate; timeout + fallback model.</li><li><b>Eval/monitor</b> — golden set for retrieval recall and answer faithfulness; track groundedness in production.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Implementation details for this are in the <a href="llm-engineering.html">LLM Engineering</a> guide; serving in <a href="fastapi-mastery.html">FastAPI</a>; monitoring in <a href="mlops.html">MLOps</a>.</div></div></section>
+<section id="recsys" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>Design: a recommendation feed</h2></div><p>'Recommend content for a 10M-user feed.' The classic two-stage pattern:</p>
+<ul><li><b>Candidate generation</b> — cheaply narrow millions of items to ~hundreds (ANN over embeddings, co-occurrence). Often precomputed/batch.</li><li><b>Ranking</b> — a heavier model scores those candidates per user, online, with fresh features.</li><li><b>Re-ranking</b> — apply business rules: diversity, freshness, dedup, policy filters.</li><li><b>Features</b> — from a feature store for train/serve consistency; cold-start handling for new users/items.</li><li><b>Metrics</b> — offline (NDCG) gates deploys; online (engagement) via A/B tests is the real judge.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>The two-stage 'retrieve then rank' shape recurs everywhere — search, recommendations, and RAG are the same skeleton. Recognizing that pattern is senior-level fluency.</div></div></section>
+<section id="interview" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>What separates a senior answer</h2></div><p>Given the same prompt, the senior answer differs in <i>posture</i>, not vocabulary:</p>
+<ul><li>Starts with questions and assumptions, not a solution.</li><li>Proposes the <b>simplest</b> design first, then scales it as constraints demand.</li><li>Names failure modes and the fallback for each, unprompted.</li><li>Quantifies — latency budgets, QPS, cost per request.</li><li>States trade-offs explicitly and defends the choice for <i>this</i> context.</li><li>Knows when <b>not</b> to use ML, or not to use the biggest model.</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Take any product you use daily and design its ML system end to end on paper using the framework. Do this weekly — it's the single best preparation for senior interviews and real architecture work.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. The capstone — it ties together every other guide.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>

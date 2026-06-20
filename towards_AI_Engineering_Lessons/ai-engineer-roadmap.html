@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Senior AI Engineer Roadmap</title>
+<meta name="description" content="The complete skill map to become a professional senior AI engineer: every domain and topic, with deep-dive guides.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#6366F1; --accent-deep:#4338CA; --accent-soft:#ECECFE;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>AI Engineer</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">AI</span> AI Engineer</div>
+      <div class="tag">roadmap · junior → senior</div>
+    </div>
+    
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">00</span><span class="navtitle">Start here</span></div><ul>
+<li><a href="#how">How to use this roadmap</a></li>
+<li><a href="#path">A realistic learning path</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Foundations</span></div><ul>
+<li><a href="#swe">Programming &amp; software engineering</a></li>
+<li><a href="#math">Math for machine learning</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Data</span></div><ul>
+<li><a href="#data-eng">Data engineering &amp; wrangling</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Machine Learning</span></div><ul>
+<li><a href="#ml">Classical machine learning</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Deep Learning</span></div><ul>
+<li><a href="#dl">Deep learning</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">05</span><span class="navtitle">LLMs &amp; GenAI</span></div><ul>
+<li><a href="#llms">NLP, transformers &amp; LLMs</a></li>
+<li><a href="#llm-eng">Generative AI / LLM engineering</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">06</span><span class="navtitle">Production</span></div><ul>
+<li><a href="#mlops">MLOps &amp; production</a></li>
+<li><a href="#infra">Cloud, containers &amp; infrastructure</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">07</span><span class="navtitle">Senior craft</span></div><ul>
+<li><a href="#sysdesign">ML system design</a></li>
+<li><a href="#responsible">Responsible AI, safety &amp; security</a></li>
+<li><a href="#professional">Professional practice</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 4.4-3.4 7.6-8 8-4.6-.4-8-3.6-8-8V7l8-4z" fill="#4f46e5"/></svg> The senior AI engineer skill map</span>
+      <h1>Everything to master to become a<br><span class="hl">senior AI engineer</span>.</h1>
+      <p class="lede">FastAPI was one slice — the serving layer. Here is the whole map: every domain, every core topic, ordered into a learning path, with deep-dive guides for the heart of the stack.</p>
+      <div class="hero-meta"><span class="chip"><b>8</b> domains</span><span class="chip"><b>7</b> deep-dive guides</span><span class="chip">junior &rarr; senior</span><span class="chip">2026-current</span></div>
+    </header>
+    <section id="how" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>How to use this roadmap</h2></div><p>This is the full skill map for a <b>senior AI engineer</b> in 2026 — someone who can take an idea from data and a model all the way to a reliable, observable production system, and make sound architectural and ethical calls along the way.</p>
+<p>The role sits at the intersection of three traditions: <b>software engineering</b> (you ship and maintain real systems), <b>machine learning</b> (you understand models deeply), and <b>operations</b> (you keep them running, fast, and safe). Seniority is less about knowing every algorithm and more about judgment: choosing the simplest thing that works, knowing the failure modes, and owning the system end to end.</p>
+<div class="callout key"><span class="ctag">Key idea</span><div>Each domain below is tagged by where it sits — <span class="badge b-found">Foundational</span> <span class="badge b-core">Core</span> <span class="badge b-adv">Advanced</span> <span class="badge b-senior">Senior</span> — and links to a dedicated deep-dive guide where one exists.</div></div>
+<p>Built deep-dive guides so far: <a href="machine-learning.html">Machine Learning</a>, <a href="deep-learning.html">Deep Learning</a>, <a href="llms-transformers.html">LLMs &amp; Transformers</a>, <a href="llm-engineering.html">LLM Engineering (RAG, Agents, Fine-tuning)</a>, <a href="mlops.html">MLOps &amp; Production</a>, <a href="ml-system-design.html">ML System Design</a>, and <a href="fastapi-mastery.html">FastAPI</a> for the serving layer.</p></section>
+<section id="path" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>A realistic learning path</h2></div><p>Skills compound, so order matters. A pragmatic sequence:</p>
+<ul><li><b>1. Foundations</b> — strong Python + software engineering, then just enough math to read papers without fear.</li><li><b>2. Data</b> — SQL, data wrangling, and pipelines. Most real AI work is data work.</li><li><b>3. Classical ML</b> — the workhorses and, crucially, how to evaluate models honestly.</li><li><b>4. Deep learning</b> — neural nets and PyTorch; train things end to end.</li><li><b>5. Transformers &amp; LLMs</b> — the architecture behind everything modern.</li><li><b>6. LLM engineering</b> — RAG, agents, fine-tuning, evals: the day-to-day of AI eng in 2026.</li><li><b>7. MLOps &amp; infra</b> — deploy, monitor, scale, and automate.</li><li><b>8. System design &amp; responsibility</b> — the senior layer: architecture, trade-offs, safety, cost.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Don't wait to 'finish' the foundations. Build small end-to-end projects from week one — a trained model served behind an API beats a year of passive tutorials.</div></div></section>
+<section id="swe" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>Programming &amp; software engineering</h2></div><p>Everything rests on being a strong software engineer who happens to do AI. If your code is fragile, your models never reach production.</p>
+<ul><li><b>Python mastery</b> — idiomatic Python, typing, generators, decorators, context managers, <code>asyncio</code>, packaging, virtual environments.</li><li><b>Data structures &amp; algorithms</b> — complexity analysis, the common structures, and enough algorithmic fluency for interviews and real bottlenecks.</li><li><b>Clean code &amp; design</b> — SOLID, common design patterns, modular project structure, code review.</li><li><b>Testing</b> — unit/integration tests, pytest, fixtures, mocking, property-based testing.</li><li><b>Version control &amp; collaboration</b> — Git fluency, branching strategies, pull requests, semantic versioning.</li><li><b>Tooling</b> — linters/formatters (ruff, black), type checking (mypy), pre-commit, debuggers, profilers.</li><li><b>APIs &amp; backend</b> — REST and gRPC, request/response design, auth, databases.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>The serving/API slice is covered in depth: <a href="fastapi-mastery.html">FastAPI, from scratch to expert</a>. A dedicated <i>Python for AI Engineering</i> deep-dive can be generated on request.</div></div></section>
+<section id="math" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>Math for machine learning</h2></div><p>You don't need a PhD, but you need enough to understand what models do, why training works, and how to read a paper. Aim for working intuition plus the ability to follow the notation.</p>
+<ul><li><b>Linear algebra</b> — vectors, matrices, matrix multiplication, dot products, norms, eigenvalues/eigenvectors, SVD. This <i>is</i> the language of ML.</li><li><b>Calculus</b> — derivatives, partial derivatives, the chain rule (this is backprop), gradients and the Jacobian.</li><li><b>Probability &amp; statistics</b> — distributions, Bayes' rule, expectation/variance, MLE, hypothesis testing, confidence intervals.</li><li><b>Optimization</b> — gradient descent and its variants, convexity, loss landscapes, learning rates.</li><li><b>Information theory</b> — entropy, cross-entropy, KL divergence (the loss functions you'll actually use).</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Learn the math <i>as you need it</i>, anchored to a concrete model. Understanding cross-entropy is far easier while training a classifier than in the abstract.</div></div></section>
+<section id="data-eng" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Data engineering &amp; wrangling</h2></div><p>Models are commodities; <b>data is the moat</b>. Senior AI engineers spend more time on data than on models, and a clean, reliable data path is what separates a demo from a product.</p>
+<ul><li><b>SQL</b> — deep fluency: joins, window functions, CTEs, aggregation, query optimization.</li><li><b>Data manipulation</b> — pandas and Polars; vectorized thinking; cleaning, joining, reshaping messy data.</li><li><b>Pipelines &amp; ETL/ELT</b> — batch orchestration (Airflow, Dagster, Prefect), idempotency, backfills.</li><li><b>Big data</b> — Spark / distributed processing, partitioning, file formats (Parquet, Arrow).</li><li><b>Streaming</b> — Kafka and event-driven data, real-time features.</li><li><b>Storage</b> — data lakes, warehouses, the lakehouse pattern; OLTP vs OLAP.</li><li><b>Data quality &amp; governance</b> — validation, schemas, lineage, versioning datasets (DVC).</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>A dedicated <i>Data Engineering for AI</i> deep-dive can be generated on request — say the word.</div></div></section>
+<section id="ml" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Classical machine learning</h2></div><p>Before transformers, learn the fundamentals that still win on most tabular, business, and small-data problems — and that teach you how to evaluate <i>any</i> model honestly.</p>
+<ul><li><b>Supervised learning</b> — linear/logistic regression, decision trees, random forests, gradient boosting (XGBoost/LightGBM), SVMs, kNN.</li><li><b>Unsupervised learning</b> — k-means, hierarchical clustering, PCA, dimensionality reduction.</li><li><b>Model evaluation</b> — train/val/test splits, cross-validation, the right metrics per task, the bias–variance trade-off.</li><li><b>Feature engineering</b> — encoding, scaling, handling missing data, leakage avoidance.</li><li><b>Regularization &amp; tuning</b> — L1/L2, hyperparameter search, dealing with imbalance and overfitting.</li><li><b>The workflow</b> — framing a problem, baselines, error analysis, iteration.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="machine-learning.html">Machine Learning, from scratch to expert</a>.</div></div></section>
+<section id="dl" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Deep learning</h2></div><p>Neural networks power modern AI. Learn to build, train, and debug them — and to reason about why training succeeds or fails.</p>
+<ul><li><b>Fundamentals</b> — neurons, layers, activations, forward/backward pass, backpropagation, gradient descent.</li><li><b>Training dynamics</b> — loss functions, optimizers (SGD, Adam/AdamW), learning-rate schedules, batch/layer norm, dropout, weight init.</li><li><b>Architectures</b> — MLPs, CNNs (vision), RNNs/LSTMs (sequence history), and the attention/transformer leap.</li><li><b>Frameworks</b> — PyTorch (tensors, autograd, <code>nn.Module</code>, training loops), and the high-level ecosystem.</li><li><b>Practical training</b> — GPUs, mixed precision, gradient accumulation, debugging vanishing/exploding gradients, overfitting.</li><li><b>Transfer learning</b> — using and fine-tuning pretrained models.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="deep-learning.html">Deep Learning with PyTorch, from scratch to expert</a>.</div></div></section>
+<section id="llms" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>NLP, transformers &amp; LLMs</h2></div><p>The transformer is the architecture behind ChatGPT, Claude, and nearly every 2026 AI system. Understanding it deeply is what makes you an AI engineer rather than an API caller.</p>
+<ul><li><b>Text foundations</b> — tokenization (BPE), embeddings, the classic NLP tasks.</li><li><b>Attention &amp; transformers</b> — self-attention, multi-head attention, positional encoding, the encoder/decoder stack.</li><li><b>LLM internals</b> — pretraining objectives, scaling laws, decoding strategies (greedy, beam, sampling, temperature, top-p), the KV cache.</li><li><b>Model families</b> — encoder (BERT), decoder (GPT-style), encoder–decoder (T5); when to use which.</li><li><b>The HuggingFace ecosystem</b> — transformers, datasets, tokenizers.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="llms-transformers.html">LLMs &amp; Transformers, from attention to inference</a>.</div></div></section>
+<section id="llm-eng" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Generative AI / LLM engineering</h2></div><p>This is the core of the modern AI engineering job: building reliable products <i>on top of</i> LLMs. It's where most teams are hiring in 2026.</p>
+<ul><li><b>Prompt engineering</b> — system prompts, few-shot, chain-of-thought, structured output, prompt templating.</li><li><b>RAG</b> — chunking, embeddings, vector databases, retrieval, reranking, grounding, citation.</li><li><b>Agents</b> — tool use / function calling, planning, multi-step workflows, memory, multi-agent systems, MCP.</li><li><b>Fine-tuning &amp; adaptation</b> — SFT, LoRA/QLoRA, PEFT, when fine-tuning beats prompting/RAG, RLHF/DPO at a high level.</li><li><b>Evaluation</b> — offline evals, LLM-as-judge, golden datasets, regression testing, hallucination and groundedness checks.</li><li><b>Guardrails &amp; reliability</b> — input/output validation, safety filters, fallback handling, structured outputs.</li><li><b>Inference optimization</b> — quantization, batching, caching, serving engines (vLLM, TGI), latency/cost trade-offs.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="llm-engineering.html">LLM Engineering: RAG, Agents, Fine-tuning &amp; Evals</a>.</div></div></section>
+<section id="mlops" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>MLOps &amp; production</h2></div><p>A model in a notebook has zero value. MLOps is the discipline of getting models into production reliably and keeping them healthy — the skill that most distinguishes senior engineers from talented hobbyists.</p>
+<ul><li><b>Experiment tracking</b> — MLflow / Weights &amp; Biases; reproducibility, run comparison.</li><li><b>Model &amp; data versioning</b> — model registries, DVC, dataset lineage.</li><li><b>Serving</b> — REST/gRPC inference, batch vs online, model servers, autoscaling.</li><li><b>CI/CD for ML</b> — automated testing, training, and deployment pipelines; canary and shadow deploys.</li><li><b>Monitoring</b> — latency/throughput, data &amp; concept drift, model-quality metrics, alerting.</li><li><b>Feature stores</b> — consistent features across training and serving.</li><li><b>Retraining loops</b> — triggers, automation, rollback strategies.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="mlops.html">MLOps &amp; Production ML</a>.</div></div></section>
+<section id="infra" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Cloud, containers &amp; infrastructure</h2></div><p>AI systems run on infrastructure. You don't have to be a full SRE, but you must be dangerous with the cloud and comfortable with containers.</p>
+<ul><li><b>Containers</b> — Docker fundamentals, multi-stage builds, slim images, GPU containers.</li><li><b>Orchestration</b> — Kubernetes basics: pods, deployments, services, scaling, plus serving tools (KServe, Ray Serve).</li><li><b>Cloud</b> — one provider deeply (AWS/GCP/Azure): compute, storage, IAM, managed ML (SageMaker/Vertex), serverless.</li><li><b>GPUs &amp; accelerators</b> — provisioning, CUDA basics, cost management, spot instances.</li><li><b>Networking &amp; security basics</b> — load balancing, secrets management, TLS, least-privilege.</li><li><b>IaC</b> — Terraform / infrastructure as code.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>A dedicated <i>Cloud, Docker &amp; Kubernetes for AI</i> deep-dive can be generated on request.</div></div></section>
+<section id="sysdesign" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>ML system design</h2></div><p>The defining senior skill: designing complete AI systems under real constraints — latency, cost, scale, reliability — and defending your trade-offs. It's also the heart of senior interviews.</p>
+<ul><li><b>Requirements &amp; framing</b> — translating a vague ask into latency/throughput/quality/cost targets.</li><li><b>Architecture patterns</b> — online vs batch inference, caching layers, async pipelines, the RAG/agent stack.</li><li><b>Scaling &amp; performance</b> — horizontal scaling, load balancing, queues, model/inference optimization.</li><li><b>Reliability</b> — redundancy, graceful degradation, fallbacks, circuit breakers.</li><li><b>Cost engineering</b> — token/compute budgets, model right-sizing, caching to cut spend.</li><li><b>Trade-off thinking</b> — build vs buy, big model vs small, accuracy vs latency vs cost.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>Full deep-dive: <a href="ml-system-design.html">ML System Design for senior engineers</a>.</div></div></section>
+<section id="responsible" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Responsible AI, safety &amp; security</h2></div><p>Senior engineers own the consequences of what they ship. This is no longer optional — it's a core competency and, increasingly, a legal one.</p>
+<ul><li><b>Fairness &amp; bias</b> — detecting and mitigating bias in data and models; fairness metrics.</li><li><b>Interpretability</b> — SHAP, LIME, attention analysis; explaining model decisions.</li><li><b>Privacy</b> — PII handling, anonymization, differential privacy, data-retention policy.</li><li><b>LLM safety &amp; security</b> — prompt injection, jailbreaks, data exfiltration, output filtering, red-teaming.</li><li><b>Governance &amp; compliance</b> — model cards, audit trails, the EU AI Act and emerging regulation.</li><li><b>Robustness</b> — adversarial inputs, distribution shift, safe failure.</li></ul>
+<div class="callout key"><span class="ctag">Guide</span><div>A dedicated <i>Responsible AI &amp; LLM Security</i> deep-dive can be generated on request.</div></div></section>
+<section id="professional" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Professional practice</h2></div><p>The skills that turn a strong engineer into a senior one are rarely technical. These compound faster than any framework.</p>
+<ul><li><b>Reading research</b> — reading papers efficiently, separating signal from hype, reproducing results.</li><li><b>Communication</b> — explaining trade-offs to non-experts, writing clear design docs, presenting results.</li><li><b>Product sense</b> — knowing which problems are worth solving and when <i>not</i> to use ML.</li><li><b>Mentorship &amp; reviews</b> — raising the team's bar, reviewing code and designs.</li><li><b>Estimation &amp; scoping</b> — sizing work realistically, de-risking the unknown first.</li><li><b>Portfolio</b> — a few deep, finished, end-to-end projects beat a hundred tutorials.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>The fastest way to demonstrate seniority: ship one real system end to end — data → model → API → deployed → monitored → documented — and be able to explain every trade-off you made.</div></div></section>
+    <footer>This roadmap is a living map, not a checklist to grind. Build as you learn. Deep-dive guides: <a href="machine-learning.html">ML</a> &middot; <a href="deep-learning.html">Deep Learning</a> &middot; <a href="llms-transformers.html">LLMs &amp; Transformers</a> &middot; <a href="llm-engineering.html">LLM Engineering</a> &middot; <a href="mlops.html">MLOps</a> &middot; <a href="ml-system-design.html">System Design</a> &middot; <a href="fastapi-mastery.html">FastAPI</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>

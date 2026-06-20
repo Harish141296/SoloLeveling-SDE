@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Learning with PyTorch, from scratch to expert</title>
+<meta name="description" content="Neural networks for AI engineers: tensors, autograd, training loops, CNNs, sequences, scaling, and debugging.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#8B5CF6; --accent-deep:#6D28D9; --accent-soft:#EFEAFE;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>Deep Learning</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">DL</span> Deep Learning</div>
+      <div class="tag">neural nets · PyTorch</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Fundamentals</span></div><ul>
+<li><a href="#intro">From ML to neural networks</a></li>
+<li><a href="#tensors">Tensors &amp; autograd</a></li>
+<li><a href="#module">Building a model with nn.Module</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Training</span></div><ul>
+<li><a href="#loop">The training loop</a></li>
+<li><a href="#optim">Loss, optimizers &amp; learning rate</a></li>
+<li><a href="#regularize">Regularization &amp; generalization</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Architectures</span></div><ul>
+<li><a href="#cnn">Convolutional networks (vision)</a></li>
+<li><a href="#seq">Sequences: from RNNs to attention</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Scaling up</span></div><ul>
+<li><a href="#scale">Training at scale</a></li>
+<li><a href="#transfer">Transfer learning &amp; fine-tuning</a></li>
+<li><a href="#debug">Debugging training that won't learn</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.4" fill="#8B5CF6"/><circle cx="12" cy="5" r="2.4" fill="#8B5CF6"/><circle cx="12" cy="19" r="2.4" fill="#8B5CF6"/><circle cx="19" cy="12" r="2.4" fill="#8B5CF6"/></svg> Deep learning</span>
+      <h1>Deep Learning,<br>build &amp; train <span class="hl">neural networks</span>.</h1>
+      <p class="lede">Neurons, backprop, the PyTorch training loop, the major architectures, and how to scale and debug training — the foundation everything modern is built on.</p>
+      <div class="hero-meta"><span class="chip">PyTorch</span><span class="chip">train from scratch</span><span class="chip">GPU-ready</span><span class="chip">11 topics</span></div>
+    </header>
+    <section id="intro" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>From ML to neural networks</h2></div><p>A neural network is a stack of simple units. Each unit computes a weighted sum of its inputs, adds a bias, and passes the result through a non-linear <b>activation</b>. Stacking these layers lets the network learn arbitrarily complex functions — the 'deep' in deep learning.</p>
+<ul><li><b>Weights &amp; biases</b> — the learnable parameters, adjusted during training.</li><li><b>Activations</b> — ReLU, GELU, sigmoid, tanh; the non-linearity is what makes depth useful.</li><li><b>Forward pass</b> — input flows through layers to a prediction.</li><li><b>Backward pass</b> — the error flows back, and gradients tell each weight how to change.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Training = repeatedly: predict, measure error (loss), compute gradients via backprop, nudge weights downhill. That loop is the entire game.</div></div></section>
+<section id="tensors" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Tensors &amp; autograd</h2></div><p>PyTorch's two superpowers: tensors (n-dimensional arrays that run on GPUs) and autograd (automatic differentiation — it builds the gradient computation for you).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import torch
+
+# Tensors: like NumPy arrays, but GPU-capable and differentiable.
+x = torch.tensor([[1., 2.], [3., 4.]])
+print(x.shape, x.dtype, x.device)
+
+# Move to GPU if available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+x = x.to(device)
+
+# Autograd: track operations to compute gradients automatically.
+w = torch.tensor(2.0, requires_grad=True)
+y = w ** 2 + 3 * w            # some function of w
+y.backward()                  # compute dy/dw
+print(w.grad)                 # tensor(7.)  -&gt; derivative 2w+3 at w=2</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Autograd is why you never hand-derive gradients. You define the forward computation; PyTorch differentiates it.</div></div></section>
+<section id="module" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Building a model with nn.Module</h2></div><p>Models subclass <code>nn.Module</code>: define layers in <code>__init__</code>, the data flow in <code>forward</code>. PyTorch tracks all parameters for you.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import torch.nn as nn
+
+class MLP(nn.Module):
+    def __init__(self, in_dim, hidden, out_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden, out_dim),
+        )
+
+    def forward(self, x):
+        return self.net(x)            # logits (no softmax here)
+
+model = MLP(in_dim=784, hidden=256, out_dim=10).to(device)
+print(sum(p.numel() for p in model.parameters()), "parameters")</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Output raw logits, not probabilities. <code>nn.CrossEntropyLoss</code> applies softmax internally — doing it twice hurts training.</div></div></section>
+<section id="loop" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>The training loop</h2></div><p>Every PyTorch model trains with the same five-step loop. Memorize it — you'll write it hundreds of times.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import torch.nn as nn
+
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)
+
+for epoch in range(num_epochs):
+    model.train()
+    for xb, yb in train_loader:
+        xb, yb = xb.to(device), yb.to(device)
+
+        optimizer.zero_grad()        # 1. clear old gradients
+        logits = model(xb)           # 2. forward pass
+        loss = loss_fn(logits, yb)   # 3. compute loss
+        loss.backward()              # 4. backprop -&gt; gradients
+        optimizer.step()             # 5. update weights
+
+    # validation
+    model.eval()
+    with torch.no_grad():
+        correct = sum((model(xb.to(device)).argmax(1) == yb.to(device)).sum().item()
+                      for xb, yb in val_loader)</code></pre></div>
+<ul><li><code>zero_grad()</code> — PyTorch accumulates gradients; clear them each step or they pile up.</li><li><code>model.train()</code> / <code>model.eval()</code> — toggles dropout and batchnorm behavior.</li><li><code>torch.no_grad()</code> — disables gradient tracking for faster, lower-memory inference.</li></ul></section>
+<section id="optim" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Loss, optimizers &amp; learning rate</h2></div><p>Three knobs decide whether training works at all: the loss (what you minimize), the optimizer (how you descend), and the learning rate (how big each step is).</p>
+<ul><li><b>Loss</b> — CrossEntropy for classification, MSE/L1 for regression, task-specific losses otherwise.</li><li><b>Optimizer</b> — AdamW is the safe default; SGD+momentum can generalize better with tuning.</li><li><b>Learning rate</b> — the most important hyperparameter. Too high diverges, too low crawls.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># A scheduler decays the LR over training for better convergence.
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
+
+for epoch in range(num_epochs):
+    train_one_epoch(...)
+    scheduler.step()        # step the LR schedule once per epoch</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>If a model won't learn, change the learning rate before anything else. Sweep it on a log scale (1e-2, 1e-3, 1e-4) first.</div></div></section>
+<section id="regularize" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Regularization &amp; generalization</h2></div><p>Deep nets have enough capacity to memorize the training set. Regularization forces them to generalize instead.</p>
+<ul><li><b>Dropout</b> — randomly zeroes activations during training; prevents co-adaptation.</li><li><b>Batch / layer norm</b> — stabilizes and speeds up training.</li><li><b>Weight decay</b> — L2 penalty, built into AdamW.</li><li><b>Early stopping</b> — stop when validation loss stops improving.</li><li><b>Data augmentation</b> — expand the dataset with realistic transforms (flips, crops, noise).</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Train one model with dropout and weight decay, one without. Plot both train and validation curves and watch the gap close.</div></div></section>
+<section id="cnn" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Convolutional networks (vision)</h2></div><p>CNNs exploit the structure of images: convolutional filters detect local patterns (edges → textures → objects), with far fewer parameters than a dense net.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import torch.nn as nn
+
+class SmallCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+        )
+        self.head = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1), nn.Flatten(),
+            nn.Linear(64, num_classes),
+        )
+
+    def forward(self, x):
+        return self.head(self.features(x))</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>In practice you rarely train vision models from scratch — you fine-tune a pretrained ResNet or ViT (see transfer learning below).</div></div></section>
+<section id="seq" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Sequences: from RNNs to attention</h2></div><p>Text, audio, and time series are sequences. RNNs/LSTMs process them step by step, carrying a hidden state — but they struggle with long-range dependencies and can't parallelize over time.</p>
+<ul><li><b>RNN / LSTM / GRU</b> — recurrent state; good intuition, now largely historical for NLP.</li><li><b>The problem</b> — long sequences cause vanishing gradients; sequential compute is slow.</li><li><b>The fix</b> — <b>attention</b> lets every position look at every other directly, in parallel. That insight became the transformer.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>This is the bridge to the next guide. Continue with <a href="llms-transformers.html">LLMs &amp; Transformers</a> to see how attention replaced recurrence and powered modern AI.</div></div></section>
+<section id="scale" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Training at scale</h2></div><p>Real models need GPUs and the tricks that make them train fast and fit in memory.</p>
+<ul><li><b>DataLoader</b> — batching, shuffling, multi-worker loading, <code>pin_memory</code> for fast GPU transfer.</li><li><b>Mixed precision</b> — train in fp16/bf16 with <code>torch.amp</code>; ~2× faster, half the memory.</li><li><b>Gradient accumulation</b> — simulate large batches on small GPUs.</li><li><b>Distributed training</b> — DDP across multiple GPUs/nodes; FSDP/DeepSpeed for huge models.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from torch.amp import autocast, GradScaler
+
+scaler = GradScaler()
+for xb, yb in train_loader:
+    optimizer.zero_grad()
+    with autocast(device_type="cuda", dtype=torch.bfloat16):
+        loss = loss_fn(model(xb), yb)
+    scaler.scale(loss).backward()    # scaled to avoid fp16 underflow
+    scaler.step(optimizer)
+    scaler.update()</code></pre></div></section>
+<section id="transfer" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Transfer learning &amp; fine-tuning</h2></div><p>You almost never start from random weights. Take a model pretrained on huge data and adapt it to your task with a fraction of the data and compute.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import torch.nn as nn
+from torchvision import models
+
+# Load pretrained backbone
+net = models.resnet50(weights="IMAGENET1K_V2")
+
+# Freeze the backbone, train only a new head
+for p in net.parameters():
+    p.requires_grad = False
+net.fc = nn.Linear(net.fc.in_features, num_classes)   # new trainable head
+
+optimizer = torch.optim.AdamW(net.fc.parameters(), lr=1e-3)</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Transfer learning is why a team with 1,000 labeled images can build a strong classifier. The same idea underlies LLM fine-tuning (LoRA) in the next guides.</div></div></section>
+<section id="debug" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>Debugging training that won't learn</h2></div><p>Models fail silently — they run but don't learn. A senior engineer has a checklist instead of panic.</p>
+<ul><li><b>Overfit one batch first.</b> If the model can't reach ~0 loss on a single batch, there's a bug — not a tuning issue.</li><li><b>Check shapes &amp; loss inputs.</b> Logits vs probabilities, label dtype/range, the right loss.</li><li><b>Loss is NaN</b> — LR too high, bad data, missing normalization, fp16 overflow.</li><li><b>Loss flat</b> — LR too low, frozen params, dead ReLUs, vanishing gradients.</li><li><b>Train good, val bad</b> — overfitting: add regularization or data.</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Deliberately set the learning rate to 10 and watch the loss explode to NaN, then to 1e-8 and watch it barely move. Feeling both failure modes builds intuition fast.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Next: <a href="llms-transformers.html">LLMs &amp; Transformers</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>
