@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Engineering: RAG, Agents, Fine-tuning &amp; Evals</title>
+<meta name="description" content="Build production LLM apps: prompting, structured output, RAG, agents, fine-tuning (LoRA), evaluation, and guardrails.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#F59E0B; --accent-deep:#B45309; --accent-soft:#FBF0DA;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>LLM Engineering</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">GE</span> LLM Engineering</div>
+      <div class="tag">RAG · agents · evals</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Prompting</span></div><ul>
+<li><a href="#prompting">Prompt engineering that holds up</a></li>
+<li><a href="#structured">Structured output &amp; function calling</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">RAG</span></div><ul>
+<li><a href="#rag">Retrieval-Augmented Generation</a></li>
+<li><a href="#ragbuild">Building a minimal RAG pipeline</a></li>
+<li><a href="#retrieval">Better retrieval: chunking, hybrid &amp; reranking</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Agents</span></div><ul>
+<li><a href="#agents">Agents &amp; tool use</a></li>
+<li><a href="#agentdesign">Memory, planning &amp; multi-agent</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Adapt &amp; ship</span></div><ul>
+<li><a href="#finetune">Fine-tuning: when and how</a></li>
+<li><a href="#evals">Evaluation: the senior differentiator</a></li>
+<li><a href="#guardrails">Guardrails, reliability &amp; cost</a></li>
+<li><a href="#ship">A production LLM application</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5L12 2z" fill="#F59E0B"/></svg> Applied GenAI</span>
+      <h1>LLM Engineering:<br><span class="hl">RAG, agents, fine-tuning &amp; evals</span>.</h1>
+      <p class="lede">The day-to-day of an AI engineer in 2026: build reliable products on top of LLMs — grounded with retrieval, extended with tools, adapted with fine-tuning, and trusted because you evaluate them.</p>
+      <div class="hero-meta"><span class="chip">RAG · agents · evals</span><span class="chip">2026 core skill</span><span class="chip">production-grade</span><span class="chip">12 topics</span></div>
+    </header>
+    <section id="prompting" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Prompt engineering that holds up</h2></div><p>Prompting is the cheapest lever and the first thing to exhaust before reaching for RAG or fine-tuning. Production prompts are engineered artifacts — versioned, tested, and templated — not chat messages.</p>
+<ul><li><b>System prompt</b> — set role, constraints, tone, and output format up front.</li><li><b>Few-shot</b> — show 2–5 examples of exactly the input→output you want.</li><li><b>Chain-of-thought</b> — ask the model to reason step by step for complex tasks.</li><li><b>Be specific</b> — spell out format, length, and what to do on uncertainty.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import anthropic
+client = anthropic.Anthropic()   # reads ANTHROPIC_API_KEY
+
+resp = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=512,
+    system=("You are a precise data extraction assistant. "
+            "Return ONLY valid JSON. If a field is missing, use null."),
+    messages=[{"role": "user", "content": f"Extract name, email, company:\n{text}"}],
+)
+print(resp.content[0].text)</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Treat prompts like code: store them in version control, parameterize with templates, and cover them with evals so a 'small wording tweak' can't silently break production.</div></div></section>
+<section id="structured" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Structured output &amp; function calling</h2></div><p>Apps need machine-readable output, not prose. Two reliable techniques: instruct-and-validate JSON, and tool/function calling where the model returns a structured call you execute.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from pydantic import BaseModel, ValidationError
+import json
+
+class Contact(BaseModel):
+    name: str
+    email: str | None = None
+    company: str | None = None
+
+raw = resp.content[0].text
+try:
+    contact = Contact.model_validate_json(raw)   # validate the LLM's JSON
+except ValidationError as e:
+    # retry with the error fed back, or fall back gracefully
+    ...</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Pydantic validation on LLM output is non-negotiable in production. Models drift; your parser must catch it, not crash on it.</div></div></section>
+<section id="rag" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Retrieval-Augmented Generation</h2></div><p>LLMs hallucinate and don't know your private or recent data. RAG fixes both: retrieve relevant documents at query time and put them in the prompt, so the model answers from real, current sources it can cite.</p>
+<ul><li><b>Index (offline)</b> — chunk documents, embed each chunk, store vectors in a vector DB.</li><li><b>Retrieve (online)</b> — embed the query, find the nearest chunks.</li><li><b>Generate</b> — stuff the retrieved chunks into the prompt and ask the model to answer <i>from them</i>.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>RAG is the default architecture for 'chat with my docs / knowledge base.' It's grounding, not memorization — and it lets you update knowledge by re-indexing, no retraining.</div></div></section>
+<section id="ragbuild" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>Building a minimal RAG pipeline</h2></div><p>A complete, runnable RAG loop with open tools: sentence-transformers for embeddings, Chroma for storage.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import chromadb
+from sentence_transformers import SentenceTransformer
+
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+db = chromadb.Client().create_collection("docs")
+
+# --- INDEX (offline) ---
+def chunk(text, size=500, overlap=50):
+    return [text[i:i+size] for i in range(0, len(text), size - overlap)]
+
+chunks = chunk(document_text)
+db.add(ids=[str(i) for i in range(len(chunks))],
+       documents=chunks,
+       embeddings=embedder.encode(chunks).tolist())
+
+# --- RETRIEVE + GENERATE (online) ---
+def answer(question, k=4):
+    q_emb = embedder.encode([question]).tolist()
+    hits = db.query(query_embeddings=q_emb, n_results=k)["documents"][0]
+    context = "\n---\n".join(hits)
+    prompt = (f"Answer using ONLY the context. If it's not there, say so.\n\n"
+              f"Context:\n{context}\n\nQuestion: {question}")
+    resp = client.messages.create(model="claude-sonnet-4-6", max_tokens=400,
+                                  messages=[{"role": "user", "content": prompt}])
+    return resp.content[0].text</code></pre></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Index a few of your own documents and ask questions. Then ask something <i>not</i> in them — a good prompt makes the model say 'not found' instead of inventing.</div></div></section>
+<section id="retrieval" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Better retrieval: chunking, hybrid &amp; reranking</h2></div><p>Naive RAG retrieves irrelevant chunks and the answer suffers. Retrieval quality is where most RAG systems live or die — invest here before touching the LLM.</p>
+<ul><li><b>Smart chunking</b> — split on semantic boundaries (headings, paragraphs), not blind character counts; tune size/overlap.</li><li><b>Hybrid search</b> — combine dense (embedding) with sparse (BM25 keyword) for the best of both.</li><li><b>Reranking</b> — retrieve 20 candidates, then a cross-encoder reranker scores and keeps the top 4.</li><li><b>Metadata filtering</b> — restrict by source, date, or permissions before semantic search.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Always evaluate retrieval separately from generation. Measure recall@k on a labeled set: if the right chunk isn't retrieved, no LLM can answer correctly.</div></div></section>
+<section id="agents" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Agents &amp; tool use</h2></div><p>An agent is an LLM in a loop that can call tools (functions, APIs, search, code execution), observe the results, and decide the next step. This is how LLMs act on the world instead of just talking about it.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">tools = [{
+    "name": "get_weather",
+    "description": "Get current weather for a city",
+    "input_schema": {"type": "object",
+                     "properties": {"city": {"type": "string"}},
+                     "required": ["city"]},
+}]
+
+resp = client.messages.create(
+    model="claude-sonnet-4-6", max_tokens=400, tools=tools,
+    messages=[{"role": "user", "content": "What's the weather in Tokyo?"}],
+)
+
+# The model returns a tool_use block; you run the tool and feed the result back.
+for block in resp.content:
+    if block.type == "tool_use":
+        result = run_tool(block.name, block.input)      # your code executes it
+        # append tool_result to messages and call again -&gt; the agent loop</code></pre></div>
+<ul><li><b>The loop</b> — think → call tool → observe → repeat until done.</li><li><b>MCP</b> — the Model Context Protocol standardizes how agents connect to tools and data sources.</li><li><b>Guard the loop</b> — cap iterations, validate tool inputs, and sandbox anything that runs code.</li></ul></section>
+<section id="agentdesign" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Memory, planning &amp; multi-agent</h2></div><p>Beyond a single loop, real agentic systems need state and structure — but add complexity only when a simpler design fails.</p>
+<ul><li><b>Memory</b> — short-term (conversation), long-term (vector store of past interactions), scratchpad for working state.</li><li><b>Planning</b> — decompose a goal into sub-tasks; reflect on failures and retry.</li><li><b>Multi-agent</b> — specialized agents (planner, researcher, critic) that hand off; powerful but harder to debug.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Senior judgment: most 'agent' problems are solved better by a well-structured workflow with one or two tool calls than by an open-ended autonomous agent. Reach for autonomy last.</div></div></section>
+<section id="finetune" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Fine-tuning: when and how</h2></div><p>Fine-tuning adjusts a model's weights on your data. It's powerful but often the wrong first move — prompting and RAG are cheaper and faster to iterate.</p>
+<ul><li><b>Use prompting/RAG for</b> — adding knowledge, changing facts, most tasks.</li><li><b>Use fine-tuning for</b> — a consistent style/format, a narrow specialized task, or cutting prompt length/latency at scale.</li><li><b>LoRA / QLoRA</b> — train tiny adapter matrices instead of all weights; fine-tune a large model on a single GPU.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM
+
+base = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.1-8B")
+lora = LoraConfig(r=16, lora_alpha=32, target_modules=["q_proj", "v_proj"],
+                  lora_dropout=0.05, task_type="CAUSAL_LM")
+model = get_peft_model(base, lora)
+model.print_trainable_parameters()   # often &lt;1% of params are trained
+# then train with trl's SFTTrainer on your instruction dataset</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Fine-tuning teaches behavior, not facts. To add knowledge, prefer RAG — fine-tuning facts in is expensive and they go stale.</div></div></section>
+<section id="evals" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Evaluation: the senior differentiator</h2></div><p>You cannot improve what you don't measure, and LLM output is hard to measure. Teams that win build evals early; teams that ship on vibes regress silently.</p>
+<ul><li><b>Golden dataset</b> — curated input→expected pairs that represent real usage; your regression suite.</li><li><b>LLM-as-judge</b> — use a strong model with a rubric to score outputs at scale; calibrate it against human labels.</li><li><b>Component evals</b> — measure retrieval (recall@k), generation (faithfulness), and the end-to-end task separately.</li><li><b>Regression testing</b> — run evals in CI on every prompt/model change.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">def judge(question, answer, reference):
+    rubric = (f"Question: {question}\nReference: {reference}\nAnswer: {answer}\n"
+              "Score 1-5 for correctness and groundedness. Return JSON "
+              '{"score": int, "reason": str}.')
+    r = client.messages.create(model="claude-sonnet-4-6", max_tokens=200,
+                               messages=[{"role": "user", "content": rubric}])
+    return r.content[0].text</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>'It looks good' is not evaluation. A golden set + automated scoring in CI is what lets you change models or prompts with confidence.</div></div></section>
+<section id="guardrails" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Guardrails, reliability &amp; cost</h2></div><p>Production LLM systems need defenses and budgets. This is the operational layer that separates a demo from a product users trust.</p>
+<ul><li><b>Input guards</b> — detect prompt injection, off-topic, or unsafe requests before they reach the model.</li><li><b>Output guards</b> — validate structure, filter unsafe content, check groundedness/citations.</li><li><b>Reliability</b> — timeouts, retries with backoff, fallbacks to a smaller model, graceful degradation.</li><li><b>Cost &amp; latency</b> — cache repeated calls, route easy queries to small models, trim context, stream responses.</li><li><b>Serving</b> — for self-hosted models, vLLM/TGI for batched, KV-cache-efficient inference; quantize to fit GPUs.</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Add a cache keyed on the prompt to your RAG app, then measure cost and latency on repeated questions. Caching is often the highest-ROI optimization.</div></div></section>
+<section id="ship" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>A production LLM application</h2></div><p>Tie it together into something portfolio-worthy and recognizably senior:</p>
+<ul><li>A <b>FastAPI</b> service (see the FastAPI guide) exposing a <code>/chat</code> endpoint.</li><li><b>RAG</b> over a real document set with reranking and citations.</li><li><b>Structured, validated</b> outputs and input/output guardrails.</li><li>An <b>eval suite</b> in CI with a golden dataset and LLM-as-judge.</li><li><b>Caching, retries, and cost logging</b>, plus latency/quality monitoring (see the MLOps guide).</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Building this end to end — grounded, evaluated, guarded, observed — demonstrates exactly the judgment companies hire senior AI engineers for.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Pairs with <a href="mlops.html">MLOps</a> and <a href="fastapi-mastery.html">FastAPI</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>

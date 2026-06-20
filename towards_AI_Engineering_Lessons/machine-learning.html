@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Machine Learning, from scratch to expert</title>
+<meta name="description" content="Classical ML for AI engineers: workflow, models, evaluation, tuning, and shipping a clean pipeline.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#10B981; --accent-deep:#047857; --accent-soft:#E3F7EF;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>Machine Learning</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">ML</span> Machine Learning</div>
+      <div class="tag">classical ML · sklearn</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Workflow</span></div><ul>
+<li><a href="#workflow">The ML workflow &amp; problem framing</a></li>
+<li><a href="#splits">Train/validation/test &amp; data leakage</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Core models</span></div><ul>
+<li><a href="#linear">Linear &amp; logistic regression</a></li>
+<li><a href="#trees">Trees, forests &amp; gradient boosting</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Doing it well</span></div><ul>
+<li><a href="#features">Feature engineering</a></li>
+<li><a href="#metrics">Evaluation &amp; choosing the right metric</a></li>
+<li><a href="#biasvar">Bias, variance &amp; regularization</a></li>
+<li><a href="#cv">Cross-validation &amp; hyperparameter tuning</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Beyond supervised</span></div><ul>
+<li><a href="#unsupervised">Clustering &amp; dimensionality reduction</a></li>
+<li><a href="#imbalance">Imbalanced data &amp; calibration</a></li>
+<li><a href="#ship">Putting it together: a clean, shippable model</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="3" fill="#10B981"/><circle cx="18" cy="9" r="3" fill="#10B981"/><circle cx="9" cy="18" r="3" fill="#10B981"/></svg> Core machine learning</span>
+      <h1>Machine Learning,<br>from <span class="hl">data to a shipped model</span>.</h1>
+      <p class="lede">The fundamentals that still win most real-world problems — and, more importantly, how to evaluate models honestly and ship them without fooling yourself.</p>
+      <div class="hero-meta"><span class="chip">scikit-learn</span><span class="chip">tabular-first</span><span class="chip">leakage-proof</span><span class="chip">12 topics</span></div>
+    </header>
+    <section id="workflow" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>The ML workflow &amp; problem framing</h2></div><p>Machine learning is not 'pick an algorithm.' It's a loop: frame the problem, get a baseline, do error analysis, improve the weakest link, repeat. Seniors spend most of their time framing and on data — the model is often the easy part.</p>
+<ul><li><b>Frame it</b> — what's the prediction, what's the label, what's the metric the business actually cares about?</li><li><b>Baseline first</b> — a dumb model (predict the mean / majority class) sets the bar everything must beat.</li><li><b>Iterate via error analysis</b> — look at what the model gets wrong; that tells you what to fix.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Always ask: could a simple rule or heuristic solve this? If yes, you may not need ML at all. The best engineers know when <i>not</i> to use it.</div></div></section>
+<section id="splits" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Train/validation/test &amp; data leakage</h2></div><p>The single most common, most damaging beginner mistake is leakage: letting information from the test set (or the future) sneak into training. It produces models that look brilliant offline and fail in production.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.model_selection import train_test_split
+
+# Split FIRST, before any fitting/scaling/imputing.
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp
+)
+# train: fit everything   val: tune   test: touch ONCE, at the very end</code></pre></div>
+<ul><li>Fit scalers, encoders, and imputers on <b>train only</b>, then apply to val/test.</li><li>For time series, split by <b>time</b>, never randomly — you must not train on the future.</li><li>Drop features that won't exist at prediction time (a classic leak).</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>If your offline accuracy seems too good to be true, suspect leakage before celebrating.</div></div></section>
+<section id="linear" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Linear &amp; logistic regression</h2></div><p>The workhorses. Linear regression predicts a number; logistic regression predicts a probability for classification. They're fast, interpretable, and the right baseline for most problems.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+# Scaling matters for linear models. A Pipeline prevents leakage.
+clf = make_pipeline(
+    StandardScaler(),
+    LogisticRegression(C=1.0, max_iter=1000),  # C = inverse regularization
+)
+clf.fit(X_train, y_train)
+
+proba = clf.predict_proba(X_val)[:, 1]   # P(class = 1)
+preds = clf.predict(X_val)</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Logistic regression outputs probabilities via the sigmoid and is trained by minimizing cross-entropy — the same loss you'll meet again in deep learning.</div></div></section>
+<section id="trees" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Trees, forests &amp; gradient boosting</h2></div><p>Tree ensembles dominate tabular data. Gradient boosting (XGBoost, LightGBM) is the default winner of most structured-data problems and Kaggle competitions — reach for it before deep learning on tables.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.ensemble import RandomForestClassifier
+import lightgbm as lgb
+
+# Random forest: many decorrelated trees, robust, little tuning.
+rf = RandomForestClassifier(n_estimators=300, max_depth=None,
+                            n_jobs=-1, random_state=42).fit(X_train, y_train)
+
+# Gradient boosting: trees built sequentially, each fixing prior errors.
+gbm = lgb.LGBMClassifier(
+    n_estimators=500, learning_rate=0.05, num_leaves=31, subsample=0.8,
+).fit(X_train, y_train,
+      eval_set=[(X_val, y_val)],
+      callbacks=[lgb.early_stopping(50)])   # stop when val stops improving</code></pre></div>
+<ul><li><b>Random forest</b> — averages many independent trees; hard to overfit, minimal tuning.</li><li><b>Gradient boosting</b> — builds trees sequentially; higher ceiling, needs tuning + early stopping.</li><li>Trees don't need feature scaling and handle non-linear interactions natively.</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Train both on the same data and compare. Then inspect <code>gbm.feature_importances_</code> to see which features drive predictions.</div></div></section>
+<section id="features" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Feature engineering</h2></div><p>On tabular problems, good features beat fancy models. This is where domain knowledge turns into model performance.</p>
+<ul><li><b>Categoricals</b> — one-hot for low cardinality; target/ordinal encoding for high cardinality.</li><li><b>Numerics</b> — scaling for linear models, binning, log-transform skewed values.</li><li><b>Missing values</b> — impute thoughtfully; a 'was-missing' flag is often itself predictive.</li><li><b>Interactions &amp; aggregations</b> — ratios, group-by stats, date parts (day-of-week, is-weekend).</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+
+numeric = Pipeline([("impute", SimpleImputer(strategy="median")),
+                    ("scale", StandardScaler())])
+categorical = Pipeline([("impute", SimpleImputer(strategy="most_frequent")),
+                        ("onehot", OneHotEncoder(handle_unknown="ignore"))])
+
+pre = ColumnTransformer([
+    ("num", numeric, num_cols),
+    ("cat", categorical, cat_cols),
+])</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Wrap preprocessing in a <code>ColumnTransformer</code> inside a <code>Pipeline</code>. It's fit on train only, applied everywhere — leakage-proof by construction.</div></div></section>
+<section id="metrics" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Evaluation &amp; choosing the right metric</h2></div><p>The wrong metric optimizes the wrong thing. Accuracy is useless on imbalanced data — a 99%-negative dataset gets 99% accuracy by predicting 'no' every time.</p>
+<ul><li><b>Classification</b> — precision, recall, F1, ROC-AUC, PR-AUC. Pick based on the cost of each error type.</li><li><b>Regression</b> — MAE (robust), RMSE (penalizes big errors), R², MAPE.</li><li><b>Ranking/retrieval</b> — precision@k, recall@k, NDCG, MRR.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.metrics import (classification_report, roc_auc_score,
+                             confusion_matrix, precision_recall_curve)
+
+print(classification_report(y_val, preds))
+print("ROC-AUC:", roc_auc_score(y_val, proba))
+print(confusion_matrix(y_val, preds))
+
+# Threshold is a business decision, not a default of 0.5.
+prec, rec, thr = precision_recall_curve(y_val, proba)</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>The 0.5 threshold is arbitrary. Choose it from the precision/recall trade-off your product needs — a fraud model and a spam filter want very different points on that curve.</div></div></section>
+<section id="biasvar" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Bias, variance &amp; regularization</h2></div><p>Every model error is bias (too simple, underfits) or variance (too complex, overfits, memorizes noise). Diagnosing which one you have tells you exactly what to do next.</p>
+<ul><li><b>High bias</b> (train and val both poor) — add features/complexity, reduce regularization, train longer.</li><li><b>High variance</b> (great train, poor val) — more data, more regularization, simpler model, early stopping.</li><li><b>Regularization</b> — L1 (Lasso, drives weights to zero → feature selection), L2 (Ridge, shrinks weights).</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Plot train vs validation score as you increase model complexity. The gap opening up is variance appearing in real time.</div></div></section>
+<section id="cv" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Cross-validation &amp; hyperparameter tuning</h2></div><p>A single validation split is noisy. Cross-validation gives a more honest estimate; combine it with a smart search to tune hyperparameters without peeking at test.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.model_selection import cross_val_score, RandomizedSearchCV
+from scipy.stats import randint, uniform
+
+# Honest performance estimate across 5 folds.
+scores = cross_val_score(clf, X_train, y_train, cv=5, scoring="roc_auc")
+print(scores.mean(), "+/-", scores.std())
+
+# Random search usually beats grid search per unit of compute.
+search = RandomizedSearchCV(
+    gbm,
+    {"n_estimators": randint(200, 800),
+     "learning_rate": uniform(0.01, 0.2),
+     "num_leaves": randint(15, 63)},
+    n_iter=40, cv=5, scoring="roc_auc", n_jobs=-1, random_state=42,
+)
+search.fit(X_train, y_train)
+print(search.best_params_)</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>For serious tuning, Optuna's Bayesian search converges faster than random search by learning from past trials.</div></div></section>
+<section id="unsupervised" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Clustering &amp; dimensionality reduction</h2></div><p>When you have no labels, unsupervised methods find structure: segments, anomalies, compressed representations.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+# PCA: compress to the directions of greatest variance (denoise, visualize).
+pca = PCA(n_components=2).fit(X_scaled)
+X_2d = pca.transform(X_scaled)
+print("variance explained:", pca.explained_variance_ratio_.sum())
+
+# K-means: partition into k groups. Choose k with the elbow / silhouette.
+km = KMeans(n_clusters=4, n_init="auto", random_state=42).fit(X_scaled)
+labels = km.labels_</code></pre></div>
+<ul><li><b>PCA</b> — linear compression; great for visualization and removing redundant features.</li><li><b>k-means</b> — fast clustering; pick k with the elbow method or silhouette score.</li><li><b>DBSCAN</b> — density-based; finds arbitrary shapes and flags outliers, no k needed.</li></ul></section>
+<section id="imbalance" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Imbalanced data &amp; calibration</h2></div><p>Fraud, disease, and churn datasets are mostly negatives. Naive training ignores the rare class you actually care about.</p>
+<ul><li><b>Class weights</b> — <code>class_weight='balanced'</code> penalizes mistakes on the rare class more.</li><li><b>Resampling</b> — SMOTE (synthetic minority oversampling) or undersampling the majority.</li><li><b>Right metrics</b> — PR-AUC and recall, never raw accuracy.</li><li><b>Calibration</b> — if you use probabilities for decisions, calibrate them (Platt/isotonic) so 0.7 really means 70%.</li></ul>
+<div class="callout try"><span class="ctag">Try it</span><div>Take an imbalanced dataset, train once normally and once with <code>class_weight='balanced'</code>, and compare recall on the minority class.</div></div></section>
+<section id="ship" class="topic"><div class="topic-head"><span class="badge b-proj">Project</span><h2>Putting it together: a clean, shippable model</h2></div><p>A senior deliverable isn't a notebook — it's a reproducible pipeline that loads data, preprocesses, trains, evaluates, and serializes one artifact ready for serving.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import joblib
+from sklearn.pipeline import Pipeline
+
+model = Pipeline([("pre", pre), ("clf", search.best_estimator_)])
+model.fit(X_train, y_train)
+
+# Final, one-time test evaluation
+final = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+print("held-out ROC-AUC:", final)
+
+# One artifact: preprocessing + model travel together (no train/serve skew).
+joblib.dump(model, "model.joblib")
+# Serve it behind FastAPI -&gt; see the FastAPI guide.</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Because preprocessing lives inside the pipeline, the exact same transforms run at training and at serving time. That consistency is what prevents the most common production bug: training/serving skew.</div></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Load <code>model.joblib</code> in a FastAPI endpoint from the FastAPI guide and serve live predictions. That's a complete, portfolio-worthy ML project.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Next: <a href="deep-learning.html">Deep Learning</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>
