@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web &amp; APIs: Django and REST</title>
+<meta name="description" content="REST API design plus Django and Django REST Framework: models, ORM, views, serializers, and production.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#15803D; --accent-deep:#166534; --accent-soft:#DEF3E4;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.pill{font-family:'JetBrains Mono'; font-weight:600; font-size:.72rem; letter-spacing:.04em;
+  color:#fff; padding:5px 11px; border-radius:7px}
+.m-get{background:#3B82F6} .m-post{background:#10B981} .m-put{background:#F59E0B; color:#3d2a05}
+.m-patch{background:#8B5CF6} .m-del{background:#EF4444}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>Web &amp; APIs</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">Dj</span> Web &amp; APIs</div>
+      <div class="tag">Django · REST</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">REST API design</span></div><ul>
+<li><a href="#rest">REST principles</a></li>
+<li><a href="#apidesign">Designing APIs that scale</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Django</span></div><ul>
+<li><a href="#django">Django: batteries-included web</a></li>
+<li><a href="#orm">Models &amp; the ORM</a></li>
+<li><a href="#views">Views, URLs &amp; the request cycle</a></li>
+<li><a href="#drf">Django REST Framework</a></li>
+<li><a href="#djscale">Django in production</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Choosing</span></div><ul>
+<li><a href="#choose">Django vs FastAPI vs Flask</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#15803D" stroke-width="2"/><path d="M3 9h18" stroke="#15803D" stroke-width="2"/></svg> Web frameworks &amp; APIs</span>
+      <h1>Web &amp; APIs,<br>build with <span class="hl">Django &amp; REST</span>.</h1>
+      <p class="lede">Design clean REST APIs and build full-stack web apps with Django and DRF — the framework that powers a huge share of Python backends — and know when to choose it over FastAPI.</p>
+      <div class="hero-meta"><span class="chip">Django · DRF</span><span class="chip">REST design</span><span class="chip">production-ready</span><span class="chip">9 topics</span></div>
+    </header>
+    <section id="rest" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>REST principles</h2></div><p>REST is a style for HTTP APIs: model your domain as <b>resources</b> (nouns) addressed by URLs, and use HTTP <b>methods</b> (verbs) to act on them. Get these conventions right and your API is predictable to every client.</p>
+<ul><li><b>Resources &amp; URLs</b> — <code>/users</code>, <code>/users/42</code>, <code>/users/42/orders</code>. Nouns, plural, hierarchical.</li><li><b>Methods</b> — GET (read), POST (create), PUT/PATCH (update), DELETE (remove).</li><li><b>Idempotency</b> — GET/PUT/DELETE can be safely retried; POST cannot.</li><li><b>Statelessness</b> — each request carries everything needed; no server-side session memory of the client.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">GET    /api/articles          -&gt; list articles            200
+POST   /api/articles          -&gt; create one               201 + Location
+GET    /api/articles/42       -&gt; fetch one                200 / 404
+PATCH  /api/articles/42       -&gt; partial update           200
+DELETE /api/articles/42       -&gt; remove                   204</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Status codes are part of the contract: 2xx success, 4xx the client's fault (400 bad input, 401 unauth, 403 forbidden, 404 missing, 409 conflict), 5xx the server's fault.</div></div></section>
+<section id="apidesign" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Designing APIs that scale</h2></div><p>Beyond CRUD, real APIs need consistent conventions for large datasets, evolution, errors, and security.</p>
+<ul><li><b>Pagination</b> — never return unbounded lists; use limit/offset or cursor paging.</li><li><b>Filtering &amp; sorting</b> — <code>?status=active&amp;sort=-created</code>; document the allowed fields.</li><li><b>Versioning</b> — <code>/api/v1/…</code> so you can evolve without breaking existing clients.</li><li><b>Consistent errors</b> — one JSON error shape everywhere: a code, a message, optional field details.</li><li><b>Auth</b> — stateless tokens (JWT) or OAuth2 in the <code>Authorization</code> header; never in the URL.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">json</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-json">{
+  "data": [ {"id": 42, "title": "REST 101"} ],
+  "page": {"limit": 20, "offset": 0, "total": 137},
+  "error": null
+}</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Always pair an API with machine-readable docs. OpenAPI/Swagger lets clients generate SDKs and lets you test interactively — FastAPI does this for free; Django REST Framework via drf-spectacular.</div></div></section>
+<section id="django" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Django: batteries-included web</h2></div><p>Django is a mature, full-stack Python framework built for productivity: it ships an ORM, admin panel, auth, migrations, and security out of the box. Its pattern is <b>MVT</b> (Model–View–Template).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install django
+django-admin startproject mysite
+cd mysite &amp;&amp; python manage.py startapp blog
+python manage.py runserver</code></pre></div>
+<ul><li><b>Project vs app</b> — a project is the whole site; apps are reusable feature modules.</li><li><b>The admin</b> — a production-ready CRUD UI for your models with almost no code.</li><li><b>Convention over configuration</b> — sensible defaults so you build features, not plumbing.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Reach for Django when you want a complete framework (auth, admin, ORM, templates) and a monolith. Reach for FastAPI when you want a lean, async, API-only service. Both are excellent — different jobs.</div></div></section>
+<section id="orm" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Models &amp; the ORM</h2></div><p>The Django ORM lets you define your schema as Python classes and query the database without writing SQL. Migrations turn model changes into versioned schema updates.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from django.db import models
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE,
+                               related_name="articles")
+    published = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+# Querying
+Article.objects.filter(published=True).order_by("-created")[:10]
+Article.objects.filter(author__name="Ada")          # join across relation
+author.articles.count()                              # reverse relation</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">python manage.py makemigrations    # generate migration from model changes
+python manage.py migrate           # apply to the database</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Watch for the N+1 query trap: use <code>select_related</code> (joins) and <code>prefetch_related</code> to fetch related objects in one go instead of one query per row.</div></div></section>
+<section id="views" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Views, URLs &amp; the request cycle</h2></div><p>A view is a function (or class) that takes a request and returns a response. URLs map paths to views. For HTML you render templates; for APIs you return JSON (better via DRF, below).</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("articles/", views.article_list, name="article-list"),
+    path("articles/&lt;int:pk&gt;/", views.article_detail, name="article-detail"),
+]
+
+# views.py
+from django.shortcuts import render, get_object_or_404
+from .models import Article
+
+def article_list(request):
+    articles = Article.objects.filter(published=True)
+    return render(request, "blog/list.html", {"articles": articles})
+
+def article_detail(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    return render(request, "blog/detail.html", {"article": article})</code></pre></div></section>
+<section id="drf" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Django REST Framework</h2></div><p>DRF is the standard way to build APIs in Django. <b>Serializers</b> convert models to/from JSON and validate input; <b>viewsets</b> + <b>routers</b> generate full CRUD endpoints with very little code.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from rest_framework import serializers, viewsets, routers
+from .models import Article
+
+class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Article
+        fields = ["id", "title", "author", "published", "created"]
+        read_only_fields = ["created"]
+
+class ArticleViewSet(viewsets.ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    # permission_classes, pagination, filtering plug in here
+
+router = routers.DefaultRouter()
+router.register("articles", ArticleViewSet)
+# -&gt; GET/POST /articles/ and GET/PUT/PATCH/DELETE /articles/{id}/ for free</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>DRF gives you serialization, validation, auth, permissions, pagination, and throttling as composable pieces — the REST design principles from Part 1, implemented for you.</div></div></section>
+<section id="djscale" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Django in production</h2></div><p>Taking Django live means hardening settings, serving correctly, and knowing its scaling story.</p>
+<ul><li><b>Settings</b> — split dev/prod; load secrets from the environment; <code>DEBUG=False</code> in prod.</li><li><b>Security</b> — Django guards CSRF, SQL injection, and XSS by default; keep <code>ALLOWED_HOSTS</code> and HTTPS settings tight.</li><li><b>Serving</b> — Gunicorn/Uvicorn workers behind Nginx; static files via WhiteNoise or a CDN.</li><li><b>Async &amp; tasks</b> — Django supports async views; offload slow work to Celery (see Data Stores).</li><li><b>Caching</b> — Django's cache framework backs onto Redis for sessions, views, and querysets.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Run <code>python manage.py check --deploy</code> before going live — it audits your settings for common production security mistakes.</div></div></section>
+<section id="choose" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Django vs FastAPI vs Flask</h2></div><p>A senior engineer picks the right tool for the job and can justify it. All three are production-grade Python web frameworks.</p>
+<ul><li><b>Django</b> — full-stack monolith with admin, ORM, auth built in. Best for content-heavy apps, internal tools, fast feature delivery.</li><li><b>FastAPI</b> — async, type-driven, auto-documented APIs. Best for high-performance microservices and ML/AI model serving.</li><li><b>Flask</b> — minimal and unopinionated. Best for small services where you want to choose every piece yourself.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>For AI engineering specifically, FastAPI is usually the serving layer of choice (async + Pydantic + OpenAPI). Django shines when the AI feature lives inside a larger product with users, content, and an admin.</div></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Build the same tiny 'todo' API in both DRF and FastAPI. Feeling the trade-offs firsthand — boilerplate vs control, sync vs async — is the fastest way to develop real judgment.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Pairs with <a href="fastapi-mastery.html">FastAPI</a> and <a href="data-stores.html">Data Stores</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>

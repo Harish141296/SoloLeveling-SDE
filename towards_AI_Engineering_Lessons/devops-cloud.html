@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevOps &amp; Cloud: Git, Linux, Docker, K8s, CI/CD, AWS &amp; Azure</title>
+<meta name="description" content="The deploy-and-operate stack: Linux, Git, Docker, Kubernetes, CI/CD, and the AWS and Azure clouds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#EA580C; --accent-deep:#C2410C; --accent-soft:#FCE7D8;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.pill{font-family:'JetBrains Mono'; font-weight:600; font-size:.72rem; letter-spacing:.04em;
+  color:#fff; padding:5px 11px; border-radius:7px}
+.m-get{background:#3B82F6} .m-post{background:#10B981} .m-put{background:#F59E0B; color:#3d2a05}
+.m-patch{background:#8B5CF6} .m-del{background:#EF4444}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>DevOps &amp; Cloud</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">Ops</span> DevOps &amp; Cloud</div>
+      <div class="tag">containers · cloud</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">Foundations</span></div><ul>
+<li><a href="#linux">Linux &amp; the command line</a></li>
+<li><a href="#git">Git: version control</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Containers</span></div><ul>
+<li><a href="#docker">Docker: containers</a></li>
+<li><a href="#k8s">Kubernetes: orchestration</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Automation</span></div><ul>
+<li><a href="#cicd">CI/CD pipelines</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">04</span><span class="navtitle">Cloud</span></div><ul>
+<li><a href="#aws">AWS: the core services</a></li>
+<li><a href="#azure">Azure: the equivalents</a></li>
+<li><a href="#cloudfund">Cloud fundamentals &amp; IaC</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><path d="M7 18a4 4 0 010-8 5 5 0 019.6-1.4A4 4 0 0117 18H7z" stroke="#EA580C" stroke-width="2" stroke-linejoin="round"/></svg> Ship &amp; operate</span>
+      <h1>DevOps &amp; Cloud,<br><span class="hl">ship it and keep it running</span>.</h1>
+      <p class="lede">The operate-and-deploy half of engineering: the Linux shell, Git, Docker and Kubernetes, CI/CD pipelines, and the AWS and Azure clouds — everything between your code and real users.</p>
+      <div class="hero-meta"><span class="chip">Git · Linux</span><span class="chip">Docker · K8s · CI/CD</span><span class="chip">AWS · Azure</span><span class="chip">9 topics</span></div>
+    </header>
+    <section id="linux" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>Linux &amp; the command line</h2></div><p>Servers run Linux, containers run Linux, CI runs Linux. Being fluent at the shell is a baseline skill — you'll use it every day to inspect, debug, and operate systems.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash"># Navigate &amp; inspect
+ls -lah                 # list with sizes, hidden files
+cd /var/log &amp;&amp; pwd
+cat app.log | grep ERROR | tail -20     # pipes: chain small tools
+
+# Files, permissions, processes
+chmod +x deploy.sh                       # make executable
+chown user:group file
+ps aux | grep python                     # find a process
+kill -9 &lt;pid&gt;                            # stop it
+df -h ; free -m ; top                    # disk, memory, live processes</code></pre></div>
+<ul><li><b>Pipes &amp; redirection</b> — <code>|</code> chains commands, <code>&gt;</code>/<code>&gt;&gt;</code> write to files; the Unix philosophy of small composable tools.</li><li><b>Permissions</b> — read/write/execute for user/group/other; the source of many 'it works locally' bugs.</li><li><b>Everything is a file</b> — processes, devices, and config all live in the filesystem.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Learn <code>grep</code>, <code>find</code>, <code>sed</code>, <code>awk</code>, <code>ssh</code>, and an editor (vim/nano). They're how you'll debug a production box at 2am with nothing but a terminal.</div></div></section>
+<section id="git" class="topic"><div class="topic-head"><span class="badge b-found">Foundational</span><h2>Git: version control</h2></div><p>Git tracks every change and lets teams collaborate without overwriting each other. Beyond <code>add/commit/push</code>, seniority means comfort with branching, history, and conflict resolution.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">git checkout -b feature/login       # branch off main
+# ...make changes...
+git add -p                          # stage hunks interactively
+git commit -m "feat: add login flow"
+git push -u origin feature/login    # open a Pull Request from here
+
+# Keeping up to date &amp; cleaning history
+git pull --rebase origin main       # replay your work on top of latest main
+git rebase -i HEAD~3                # squash/reword recent commits
+git log --oneline --graph           # visualize history</code></pre></div>
+<ul><li><b>Branch per change</b> — short-lived feature branches merged via reviewed Pull Requests.</li><li><b>merge vs rebase</b> — merge preserves history; rebase keeps it linear. Don't rebase shared branches.</li><li><b>Conflicts</b> — normal; resolve the marked sections, test, then continue.</li><li><b>Good commits</b> — small, focused, with clear messages (Conventional Commits help).</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>A clean Git history is a gift to your future self and reviewers. Commit often locally; tidy up with interactive rebase before opening a PR.</div></div></section>
+<section id="docker" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Docker: containers</h2></div><p>Docker packages your app with its exact environment into an <b>image</b> that runs identically anywhere — your laptop, CI, and production. It ends 'works on my machine' for good.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text"># Multi-stage Dockerfile: small, reproducible image
+FROM python:3.12-slim AS base
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["fastapi", "run", "app/main.py", "--port", "8000"]</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">docker build -t myapp:1.0 .          # build an image
+docker run -p 8000:8000 myapp:1.0    # run a container from it
+docker ps                            # list running containers
+docker compose up -d                 # run a multi-service stack (app+db+redis)</code></pre></div>
+<ul><li><b>Image vs container</b> — image is the blueprint; a container is a running instance.</li><li><b>Layers</b> — each Dockerfile line is a cached layer; order them so dependencies cache well.</li><li><b>Volumes &amp; networks</b> — persist data and let containers talk to each other.</li><li><b>Compose</b> — define app + Postgres + Redis together in one YAML file for local dev.</li></ul></section>
+<section id="k8s" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Kubernetes: orchestration</h2></div><p>When you run many containers across many machines, Kubernetes (K8s) schedules them, restarts failures, scales on demand, and rolls out updates safely. It's the standard for production container orchestration.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">config.yaml</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata: { name: myapp }
+spec:
+  replicas: 3                     # run 3 copies for availability
+  selector: { matchLabels: { app: myapp } }
+  template:
+    metadata: { labels: { app: myapp } }
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:1.0
+          ports: [ { containerPort: 8000 } ]
+          resources:
+            requests: { cpu: "250m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }</code></pre></div>
+<ul><li><b>Pod</b> — the smallest unit; one or more containers that run together.</li><li><b>Deployment</b> — declares the desired state (e.g. 'always 3 replicas'); K8s makes it so.</li><li><b>Service</b> — a stable network address load-balancing across pods.</li><li><b>ConfigMaps / Secrets</b> — inject config and credentials without baking them into images.</li><li><b>Ingress</b> — routes external HTTP traffic to services.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>You declare the <i>desired state</i>; Kubernetes continuously reconciles reality to match it. That declarative, self-healing model is the whole point.</div></div></section>
+<section id="cicd" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>CI/CD pipelines</h2></div><p><b>CI</b> (continuous integration) runs your tests automatically on every push; <b>CD</b> (continuous delivery/deployment) automatically ships code that passes. Together they make releases boring — which is exactly what you want.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">config.yaml</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-yaml"># .github/workflows/ci.yml — GitHub Actions
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check .          # lint
+      - run: mypy app/             # types
+      - run: pytest --cov=app      # tests + coverage  (gate the merge)
+  deploy:
+    needs: test                    # only if tests pass
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "build image, push, roll out..."</code></pre></div>
+<ul><li><b>Fast feedback</b> — every PR is automatically linted, type-checked, and tested.</li><li><b>Quality gate</b> — merges are blocked unless the pipeline is green.</li><li><b>Safe rollout</b> — build once, deploy via blue-green or canary; automate rollback.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Pair CI/CD with the tests from the Python guide: tests are only as valuable as their automatic execution on every change.</div></div></section>
+<section id="aws" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>AWS: the core services</h2></div><p>AWS is the largest cloud provider. You don't need all 200+ services — a handful covers most application needs, and the concepts transfer to any cloud.</p>
+<ul><li><b>Compute</b> — EC2 (virtual machines), Lambda (serverless functions), ECS/EKS (containers/K8s).</li><li><b>Storage</b> — S3 (object storage for files/backups/datasets), EBS (disks).</li><li><b>Databases</b> — RDS (managed PostgreSQL/MySQL), DynamoDB (NoSQL), ElastiCache (managed Redis).</li><li><b>Networking &amp; security</b> — VPC (private networks), IAM (who can do what — least privilege!).</li><li><b>AI</b> — SageMaker (ML platform), Bedrock (managed foundation models).</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>IAM is where security lives and breaks. Grant least privilege, never hard-code credentials (use roles), and keep secrets in Secrets Manager — not in code or images.</div></div></section>
+<section id="azure" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Azure: the equivalents</h2></div><p>Microsoft Azure is the other dominant cloud, common in enterprises. The building blocks mirror AWS — learn one deeply and you can navigate the other.</p>
+<ul><li><b>Compute</b> — Virtual Machines, Azure Functions (serverless), AKS (managed Kubernetes).</li><li><b>Storage</b> — Blob Storage (≈ S3), Managed Disks.</li><li><b>Databases</b> — Azure Database for PostgreSQL, Cosmos DB (NoSQL), Azure Cache for Redis.</li><li><b>Identity</b> — Microsoft Entra ID (formerly Azure AD) for auth and access control.</li><li><b>AI</b> — Azure Machine Learning and Azure OpenAI Service.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Concepts are portable: compute, object storage, managed databases, identity/IAM, and serverless exist on every cloud. Master the model once; map the names per provider.</div></div></section>
+<section id="cloudfund" class="topic"><div class="topic-head"><span class="badge b-senior">Senior</span><h2>Cloud fundamentals &amp; IaC</h2></div><p>Beyond individual services, senior cloud work is about reliability, cost, and reproducibility across whatever provider you're on.</p>
+<ul><li><b>Regions &amp; availability zones</b> — deploy across zones for resilience; pick regions near users.</li><li><b>Scaling</b> — autoscaling groups / horizontal pod autoscalers respond to load.</li><li><b>Cost engineering</b> — right-size instances, use spot/savings plans, watch egress and idle resources.</li><li><b>Infrastructure as Code</b> — define infrastructure in Terraform so it's versioned, reviewed, and reproducible — never click-ops in production.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text"># Terraform: declarative, version-controlled infrastructure
+resource "aws_s3_bucket" "uploads" {
+  bucket = "myapp-uploads-prod"
+}
+
+resource "aws_db_instance" "db" {
+  engine         = "postgres"
+  instance_class = "db.t3.micro"
+  allocated_storage = 20
+}</code></pre></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Containerize an app (Docker), push it to a registry, and deploy it to a managed container service on one cloud. Doing the full path once — code → image → cloud → live URL — demystifies the entire stack.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Pairs with <a href="mlops.html">MLOps</a> and <a href="ml-system-design.html">System Design</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>
