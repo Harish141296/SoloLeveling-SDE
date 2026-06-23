@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Stores: SQL, PostgreSQL, Redis &amp; Celery</title>
+<meta name="description" content="The data layer for backend engineers: SQL, PostgreSQL, schema design, Redis caching, and Celery task queues.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#DB2777; --accent-deep:#BE185D; --accent-soft:#FBE3EF;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.pill{font-family:'JetBrains Mono'; font-weight:600; font-size:.72rem; letter-spacing:.04em;
+  color:#fff; padding:5px 11px; border-radius:7px}
+.m-get{background:#3B82F6} .m-post{background:#10B981} .m-put{background:#F59E0B; color:#3d2a05}
+.m-patch{background:#8B5CF6} .m-del{background:#EF4444}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>Data Stores</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">DB</span> Data Stores</div>
+      <div class="tag">SQL · Redis · Celery</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">SQL &amp; PostgreSQL</span></div><ul>
+<li><a href="#sql">SQL fundamentals</a></li>
+<li><a href="#advsql">Advanced SQL &amp; performance</a></li>
+<li><a href="#postgres">PostgreSQL specifics</a></li>
+<li><a href="#schema">Schema design &amp; migrations</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Redis</span></div><ul>
+<li><a href="#redis">Redis: the in-memory workhorse</a></li>
+<li><a href="#caching">Caching patterns &amp; beyond</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Celery</span></div><ul>
+<li><a href="#celery">Celery: background task queues</a></li>
+<li><a href="#celeryprod">Celery in production</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="8" ry="3" stroke="#DB2777" stroke-width="2"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" stroke="#DB2777" stroke-width="2"/></svg> The data layer</span>
+      <h1>Data Stores,<br><span class="hl">SQL, Postgres, Redis &amp; Celery</span>.</h1>
+      <p class="lede">The persistence and performance layer behind every backend: query relational data with SQL and PostgreSQL, cache and throttle with Redis, and run slow work in the background with Celery.</p>
+      <div class="hero-meta"><span class="chip">SQL · PostgreSQL</span><span class="chip">Redis · Celery</span><span class="chip">caching + queues</span><span class="chip">8 topics</span></div>
+    </header>
+    <section id="sql" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>SQL fundamentals</h2></div><p>SQL is the lingua franca of data, and fluency is non-negotiable for backend and AI engineers alike. The core is querying: selecting, filtering, joining, and aggregating relational data.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">-- Filter and sort
+SELECT id, title, created
+FROM articles
+WHERE published = true
+ORDER BY created DESC
+LIMIT 10;
+
+-- Join related tables
+SELECT a.title, u.name AS author
+FROM articles a
+JOIN users u ON u.id = a.author_id
+WHERE u.active = true;
+
+-- Aggregate with GROUP BY
+SELECT author_id, COUNT(*) AS n, MAX(created) AS latest
+FROM articles
+GROUP BY author_id
+HAVING COUNT(*) &gt; 5;</code></pre></div>
+<ul><li><b>JOINs</b> — INNER (matches only), LEFT (keep all left rows); the heart of relational queries.</li><li><b>WHERE vs HAVING</b> — WHERE filters rows, HAVING filters groups after aggregation.</li><li><b>NULL is special</b> — use <code>IS NULL</code>, not <code>= NULL</code>; NULL breaks naive comparisons.</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>Most 'big data' problems are solved with a well-written SQL query long before you need anything fancier. Invest here — it pays off in every role.</div></div></section>
+<section id="advsql" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Advanced SQL &amp; performance</h2></div><p>Window functions, CTEs, and indexes are what separate someone who 'knows SQL' from someone who can make it fast and expressive at scale.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">-- CTE + window function: rank articles per author by recency
+WITH ranked AS (
+  SELECT title, author_id,
+         ROW_NUMBER() OVER (PARTITION BY author_id ORDER BY created DESC) AS rn
+  FROM articles
+)
+SELECT * FROM ranked WHERE rn &lt;= 3;       -- top 3 per author
+
+-- Indexes make lookups fast; check the plan to confirm they're used
+CREATE INDEX idx_articles_author ON articles(author_id);
+EXPLAIN ANALYZE SELECT * FROM articles WHERE author_id = 42;</code></pre></div>
+<ul><li><b>Window functions</b> — ranking, running totals, per-group analytics without collapsing rows.</li><li><b>CTEs (WITH)</b> — name subqueries to make complex logic readable.</li><li><b>Indexes</b> — turn full-table scans into instant lookups; index columns you filter/join on.</li><li><b>EXPLAIN</b> — read the query plan to find slow scans and missing indexes.</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Indexes speed reads but slow writes and use space. Index deliberately — measure with EXPLAIN ANALYZE rather than guessing.</div></div></section>
+<section id="postgres" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>PostgreSQL specifics</h2></div><p>PostgreSQL is the default choice for serious applications: open-source, rock-solid, standards-compliant, and packed with features beyond plain SQL.</p>
+<ul><li><b>Rich types</b> — <code>JSONB</code> (indexed JSON), arrays, ranges, UUID, full-text search.</li><li><b>ACID transactions</b> — wrap multiple statements so they all succeed or all roll back.</li><li><b>Constraints</b> — primary/foreign keys, UNIQUE, CHECK enforce integrity at the database.</li><li><b>Extensions</b> — <code>pgvector</code> for embeddings (RAG!), PostGIS for geo, and more.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text">BEGIN;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;   -- both happen, or neither (ROLLBACK on error)
+
+-- JSONB: store and query semi-structured data
+SELECT data-&gt;&gt;'email' FROM users WHERE data-&gt;&gt;'plan' = 'pro';</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>For AI engineers: PostgreSQL + the <code>pgvector</code> extension is a popular, simple vector store for RAG — your relational data and embeddings live in one database.</div></div></section>
+<section id="schema" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Schema design &amp; migrations</h2></div><p>A good schema prevents whole classes of bugs. Model relationships explicitly, normalize to avoid duplication, and evolve the schema with versioned migrations — never by hand in production.</p>
+<ul><li><b>Normalize</b> — each fact lives in one place; relate tables with foreign keys.</li><li><b>Keys &amp; constraints</b> — let the database enforce correctness, not just your app code.</li><li><b>Migrations</b> — every schema change is a reviewed, reversible, version-controlled step (Django migrations, Alembic).</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>Denormalize only when measured performance demands it — and document why. Premature denormalization is a common source of data-integrity bugs.</div></div></section>
+<section id="redis" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Redis: the in-memory workhorse</h2></div><p>Redis is a blazingly fast in-memory data store. Because it lives in RAM, reads/writes take microseconds — perfect for caching, sessions, counters, queues, and real-time features.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import redis
+r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+r.set("user:42:name", "Ada", ex=3600)   # value with 1-hour expiry (TTL)
+r.get("user:42:name")
+
+r.incr("page:home:views")                # atomic counter
+r.lpush("queue:emails", "job-1")         # list as a simple queue
+r.sadd("online", "user:42")              # set membership
+r.expire("session:abc", 1800)            # auto-expire keys</code></pre></div>
+<ul><li><b>Data structures</b> — strings, hashes, lists, sets, sorted sets, streams — not just key/value.</li><li><b>TTL</b> — keys can auto-expire, which makes caching trivial.</li><li><b>Atomic ops</b> — <code>INCR</code> and friends are safe under concurrency.</li></ul></section>
+<section id="caching" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Caching patterns &amp; beyond</h2></div><p>The most common Redis use is caching expensive results to cut latency and database load. Get the pattern — and invalidation — right.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import json
+
+def get_user(user_id):
+    key = f"user:{user_id}"
+    cached = r.get(key)
+    if cached:
+        return json.loads(cached)        # cache HIT
+    user = db.query_user(user_id)        # cache MISS -&gt; hit the DB
+    r.set(key, json.dumps(user), ex=300) # store for 5 minutes
+    return user</code></pre></div>
+<ul><li><b>Cache-aside</b> — check cache, fall back to DB, then populate the cache (above).</li><li><b>Invalidation</b> — the hard part; expire with TTL and/or delete keys on write.</li><li><b>Rate limiting</b> — <code>INCR</code> + <code>EXPIRE</code> per user/IP to throttle requests.</li><li><b>Pub/Sub &amp; streams</b> — lightweight real-time messaging between services.</li><li><b>As a broker</b> — Redis often backs task queues like Celery (next).</li></ul>
+<div class="callout key"><span class="ctag">Key idea</span><div>“There are only two hard things in computer science: cache invalidation and naming things.” Default to short TTLs and explicit deletes on update.</div></div></section>
+<section id="celery" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Celery: background task queues</h2></div><p>Web requests must be fast, but some work is slow — sending email, processing uploads, calling an LLM, generating reports. <b>Celery</b> moves that work to background <b>workers</b> so the request returns immediately.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># tasks.py
+from celery import Celery
+
+app = Celery("myapp", broker="redis://localhost:6379/0",
+                      backend="redis://localhost:6379/1")
+
+@app.task
+def send_welcome_email(user_id):
+    user = db.query_user(user_id)
+    mailer.send(user.email, "Welcome!")
+    return "sent"
+
+# In your web request — enqueue and return instantly
+send_welcome_email.delay(user_id=42)     # non-blocking; a worker runs it</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash"># A worker process consumes and runs queued tasks
+celery -A tasks worker --loglevel=info</code></pre></div>
+<ul><li><b>Broker</b> — the queue tasks wait in (Redis or RabbitMQ).</li><li><b>Worker</b> — a separate process that pulls tasks and executes them.</li><li><b>Backend</b> — where results are stored (optional).</li></ul>
+<div class="callout note"><span class="ctag">Note</span><div>This is how CPU-bound or slow work scales in Python: hand it to workers you can run many of, independent of your web servers.</div></div></section>
+<section id="celeryprod" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Celery in production</h2></div><p>Background jobs fail, retry, and need scheduling. Production Celery is about making tasks reliable and observable.</p>
+<ul><li><b>Retries</b> — <code>autoretry_for</code> with exponential backoff for flaky external calls.</li><li><b>Idempotency</b> — design tasks so running twice is safe (they may be retried).</li><li><b>Scheduling</b> — Celery Beat runs periodic tasks (nightly reports, cleanup) like cron.</li><li><b>Routing &amp; concurrency</b> — separate queues for fast vs slow work; scale workers independently.</li><li><b>Monitoring</b> — Flower (or your metrics stack) to watch queue depth, failures, and latency.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">@app.task(autoretry_for=(ConnectionError,), retry_backoff=True, max_retries=5)
+def call_external_api(payload):
+    return httpx.post("https://api.example.com", json=payload).json()</code></pre></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Wire up Redis + Celery locally and offload a slow task from a FastAPI or Django endpoint. Watch the request return instantly while the worker logs the job — that's the pattern behind responsive apps.</div></div></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Pairs with <a href="web-apis.html">Web &amp; APIs</a> and <a href="fastapi-mastery.html">FastAPI</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>

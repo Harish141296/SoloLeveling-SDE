@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Engineering &amp; Testing</title>
+<meta name="description" content="Idiomatic Python, type hints, async, packaging, and testing with pytest — from solid to senior.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/material-darker.min.css">
+<style>
+:root{
+  --ink:#0B1020; --ink-2:#131A2E; --ink-3:#1B2540;
+  --paper:#F4F6FB; --card:#FFFFFF;
+  --accent:#2563EB; --accent-deep:#1D4ED8; --accent-soft:#E4ECFD;
+  --amber:#EBA63B; --amber-soft:#FBF1DD;
+  --text:#141B2D; --soft:#586079; --faint:#8A93A8;
+  --line:#E3E8F0; --line-2:#2A3656;
+  --radius:14px; --maxw:1320px;
+  --shadow:0 1px 2px rgba(16,24,48,.06),0 8px 30px rgba(16,24,48,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:90px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0; background:var(--paper); color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased}
+a{color:var(--accent-deep); text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--accent-soft);
+  color:var(--accent-deep); padding:.1em .38em; border-radius:5px; font-weight:500}
+#progress{position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg,var(--accent),var(--amber)); z-index:200; transition:width .1s linear}
+.shell{display:grid; grid-template-columns:300px minmax(0,1fr); max-width:var(--maxw); margin:0 auto}
+@media(max-width:980px){.shell{grid-template-columns:1fr}}
+.sidebar{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#cfd6e6; padding:24px 0 60px}
+.brand{padding:0 24px 16px}
+.brand .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700;
+  font-size:1.1rem; color:#fff; letter-spacing:-.01em; line-height:1.15}
+.mk{width:30px;height:30px;flex:none;border-radius:8px; display:grid; place-items:center;
+  background:var(--accent); color:#06121f; font-family:'Space Grotesk'; font-weight:700; font-size:.95rem}
+.brand .tag{margin-top:8px; font-size:.72rem; color:#8f9bb8; letter-spacing:.12em; text-transform:uppercase}
+.home{display:inline-block; margin:10px 24px 4px; font-family:'JetBrains Mono'; font-size:.74rem;
+  color:#9fb0d6; border:1px solid var(--line-2); padding:5px 10px; border-radius:8px}
+.home:hover{color:#fff; text-decoration:none; border-color:var(--accent)}
+.progress-mini{margin:14px 24px 4px; font-size:.72rem; color:#8f9bb8; display:flex; justify-content:space-between}
+.track{height:5px; background:var(--ink-3); border-radius:99px; margin:0 24px 14px; overflow:hidden}
+.track > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--amber)); border-radius:99px; transition:width .2s}
+.navgroup-head{display:flex; align-items:baseline; gap:9px; padding:14px 24px 6px}
+.navnum{font-family:'JetBrains Mono'; font-size:.7rem; color:var(--accent); font-weight:600;
+  border:1px solid var(--line-2); padding:1px 6px; border-radius:5px}
+.navtitle{font-family:'Space Grotesk'; font-size:.76rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:#aeb8d0}
+.sidebar ul{list-style:none; margin:0; padding:0}
+.sidebar li a{display:block; padding:6px 24px 6px 60px; font-size:.85rem; color:#aab3cb;
+  border-left:2px solid transparent; line-height:1.45}
+.sidebar li a:hover{color:#fff; text-decoration:none; background:rgba(255,255,255,.03)}
+.sidebar li a.active{color:#fff; border-left-color:var(--accent); background:rgba(255,255,255,.06); font-weight:500}
+.topbar{display:none}
+@media(max-width:980px){
+  .sidebar{position:fixed; z-index:150; width:300px; left:0; top:0; transform:translateX(-100%); transition:transform .25s}
+  .sidebar.open{transform:none}
+  .topbar{display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:140;
+    background:var(--ink); color:#fff; padding:12px 16px; font-family:'Space Grotesk'; font-weight:700}
+  .topbar button{background:var(--ink-3); color:#fff; border:0; border-radius:9px; width:40px; height:38px; font-size:1.1rem}
+  .scrim{display:none; position:fixed; inset:0; background:rgba(8,12,24,.5); z-index:145}
+  .scrim.show{display:block}
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; min-width:0}
+.hero{padding:60px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:.74rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep);
+  background:var(--accent-soft); padding:6px 12px; border-radius:99px; font-weight:600}
+.hero h1{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.025em; line-height:1.04;
+  font-size:clamp(2.1rem,5vw,3.6rem); margin:20px 0 0}
+.hero h1 .hl{color:var(--accent)}
+.hero p.lede{font-size:clamp(1.04rem,2vw,1.24rem); color:#404a63; max-width:660px; margin:20px 0 0; line-height:1.55}
+.hero-meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.chip{font-family:'JetBrains Mono'; font-size:.78rem; background:var(--card); border:1px solid var(--line);
+  padding:8px 14px; border-radius:99px; color:#3a455f; box-shadow:var(--shadow)}
+.chip b{color:var(--accent-deep)}
+.topic{padding:50px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:80px}
+.topic:last-child{border-bottom:0}
+.topic-head{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.topic h2{font-family:'Space Grotesk'; font-weight:700; letter-spacing:-.02em; font-size:clamp(1.45rem,3vw,1.95rem); margin:0; line-height:1.16}
+.topic h3{font-family:'Space Grotesk'; font-weight:600; font-size:1.1rem; margin:28px 0 4px; color:var(--ink-2)}
+.topic p{margin:14px 0; max-width:740px}
+.topic ul{max-width:760px; margin:14px 0; padding-left:0; list-style:none}
+.topic ul li{position:relative; padding-left:26px; margin:9px 0}
+.topic ul li::before{content:""; position:absolute; left:6px; top:.62em; width:7px; height:7px;
+  background:var(--accent); border-radius:2px; transform:rotate(45deg)}
+.badge{font-family:'JetBrains Mono'; font-weight:600; font-size:.68rem; letter-spacing:.06em;
+  color:#fff; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+.b-found{background:#64748B} .b-core{background:var(--accent); color:#06121f}
+.b-adv{background:var(--amber); color:#3d2a05} .b-senior{background:#E11D48} .b-proj{background:#7C3AED}
+.pill{font-family:'JetBrains Mono'; font-weight:600; font-size:.72rem; letter-spacing:.04em;
+  color:#fff; padding:5px 11px; border-radius:7px}
+.m-get{background:#3B82F6} .m-post{background:#10B981} .m-put{background:#F59E0B; color:#3d2a05}
+.m-patch{background:#8B5CF6} .m-del{background:#EF4444}
+.codewrap{margin:18px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid #0c1426}
+.codebar{display:flex; align-items:center; gap:7px; background:#0c1426; padding:11px 14px; border-bottom:1px solid #1a2540}
+.dot{width:11px;height:11px;border-radius:50%} .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.codelabel{font-family:'JetBrains Mono'; font-size:.74rem; color:#7c89a8; margin-left:8px}
+.copy{margin-left:auto; background:#1c2a47; color:#aeb9d4; border:0; font-family:'JetBrains Mono';
+  font-size:.72rem; padding:5px 12px; border-radius:7px; cursor:pointer; transition:background .15s,color .15s}
+.copy:hover,.copy.done{background:var(--accent); color:#06121f}
+.codewrap pre{margin:0; background:#0e1626; padding:18px; overflow-x:auto}
+.codewrap pre code{background:none; padding:0; color:#d6deec; font-size:.84rem; line-height:1.6; font-weight:400}
+.hljs{background:none!important}
+.callout{display:flex; gap:14px; margin:20px 0; padding:16px 18px; border-radius:12px;
+  border:1px solid var(--line); background:var(--card); align-items:flex-start; max-width:780px}
+.callout > div{flex:1; min-width:0}
+.callout p{margin:0}
+.ctag{flex:none; font-family:'JetBrains Mono'; font-size:.66rem; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:5px 9px; border-radius:6px; margin-top:1px}
+.callout.note{background:#fbfcfe; border-color:#dfe6f0}
+.callout.note .ctag{background:#eef1f7; color:#4b5876}
+.callout.try{background:var(--amber-soft); border-color:#efd9a6}
+.callout.try .ctag{background:var(--amber); color:#3d2a05}
+.callout.key{background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+.callout.key .ctag{background:var(--accent); color:#06121f}
+footer{padding:50px 0 0; color:var(--faint); font-size:.86rem}
+footer a{color:var(--accent-deep)}
+::selection{background:var(--accent); color:#06121f}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px; border-radius:4px}
+.sidebar::-webkit-scrollbar{width:9px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3656; border-radius:9px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="topbar"><button id="menuBtn" aria-label="Open navigation">&#9776;</button><span>Python</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mk">Py</span> Python</div>
+      <div class="tag">language · testing</div>
+    </div>
+    <a class="home" href="ai-engineer-roadmap.html">&larr; Back to roadmap</a>
+    <div class="progress-mini"><span>Your progress</span><span id="pctLabel">0%</span></div>
+    <div class="track"><i id="navFill"></i></div>
+    <div class="navgroup"><div class="navgroup-head"><span class="navnum">01</span><span class="navtitle">The language</span></div><ul>
+<li><a href="#idioms">Idiomatic Python &amp; the data model</a></li>
+<li><a href="#typing">Type hints &amp; static checking</a></li>
+<li><a href="#functions">Decorators, generators &amp; context managers</a></li>
+<li><a href="#async">Async Python with asyncio</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">02</span><span class="navtitle">Projects &amp; tooling</span></div><ul>
+<li><a href="#env">Environments, packaging &amp; tooling</a></li>
+<li><a href="#dataclasses">Dataclasses, errors &amp; logging</a></li>
+</ul></div>
+<div class="navgroup"><div class="navgroup-head"><span class="navnum">03</span><span class="navtitle">Testing</span></div><ul>
+<li><a href="#testbasics">Unit testing fundamentals</a></li>
+<li><a href="#pytest">Pytest in depth</a></li>
+<li><a href="#testci">Mocking, coverage &amp; TDD</a></li>
+</ul></div>
+  </aside>
+  <main>
+    <header class="hero">
+      <span class="eyebrow"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 0-3 2-3 3v2h6V7h-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/><path d="M9 8H7c-2 0-3 1-3 4s1 4 3 4h2" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="5" r="1" fill="#2563EB"/></svg> Python craftsmanship</span>
+      <h1>Python,<br>written like a <span class="hl">senior engineer</span>.</h1>
+      <p class="lede">The language done right — idiomatic code, type hints, async, clean projects — plus the unit testing and pytest skills that let you ship and refactor without fear.</p>
+      <div class="hero-meta"><span class="chip">idiomatic · typed</span><span class="chip">async-ready</span><span class="chip">pytest</span><span class="chip">9 topics</span></div>
+    </header>
+    <section id="idioms" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Idiomatic Python &amp; the data model</h2></div><p>Senior Python isn't about clever tricks — it's about writing code that reads like the language intends. Python's <b>data model</b> (the dunder methods) is what makes objects feel native.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># Pythonic patterns you should reach for by reflex
+nums = [1, 2, 3, 4, 5]
+squares = [n * n for n in nums if n % 2]        # comprehension, not a loop+append
+a, *rest = nums                                  # unpacking
+pairs = dict(zip("abc", range(3)))               # build dicts from iterables
+
+# EAFP ("easier to ask forgiveness"): try first, handle the failure
+try:
+    value = config["timeout"]
+except KeyError:
+    value = 30
+
+# The data model: make your objects behave like built-ins
+class Money:
+    def __init__(self, cents): self.cents = cents
+    def __repr__(self): return f"Money({self.cents})"
+    def __eq__(self, other): return self.cents == other.cents
+    def __add__(self, other): return Money(self.cents + other.cents)</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Prefer comprehensions, unpacking, and EAFP over manual loops and pre-checks. Implementing <code>__repr__</code>, <code>__eq__</code>, and friends makes your classes first-class citizens.</div></div></section>
+<section id="typing" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Type hints &amp; static checking</h2></div><p>Type hints are optional at runtime but invaluable in real codebases: editors autocomplete, <code>mypy</code> catches bugs before they ship, and they double as documentation. They're also the mechanism FastAPI and Pydantic use for validation.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from typing import Optional
+from collections.abc import Iterable, Callable
+
+def total(prices: list[float], discount: float = 0.0) -&gt; float:
+    return sum(prices) * (1 - discount)
+
+def find(items: Iterable[str], pred: Callable[[str], bool]) -&gt; Optional[str]:
+    return next((x for x in items if pred(x)), None)
+
+# Modern syntax (3.10+): X | None instead of Optional[X]
+def greet(name: str | None = None) -&gt; str:
+    return f"Hello {name or 'world'}"</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install mypy
+mypy app/            # static type check the whole package</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div>Adopt types gradually — start at module boundaries (function signatures) where they pay off most. Run mypy in CI to keep them honest.</div></div></section>
+<section id="functions" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Decorators, generators &amp; context managers</h2></div><p>Three constructs separate intermediate from advanced Python. Each wraps a common need into reusable syntax.</p>
+<ul><li><b>Decorators</b> — wrap a function to add behavior (logging, caching, auth) without touching its body.</li><li><b>Generators</b> — produce values lazily with <code>yield</code>; stream huge data without loading it all into memory.</li><li><b>Context managers</b> — guarantee setup/teardown (files, locks, connections) via <code>with</code>.</li></ul>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import time
+from functools import wraps
+from contextlib import contextmanager
+
+def timed(fn):                       # a decorator
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        t = time.perf_counter()
+        result = fn(*args, **kwargs)
+        print(f"{fn.__name__} took {time.perf_counter() - t:.3f}s")
+        return result
+    return wrapper
+
+def read_lines(path):                # a generator: lazy, memory-friendly
+    with open(path) as f:            # context manager: file always closes
+        for line in f:
+            yield line.rstrip()
+
+@contextmanager                      # build your own context manager
+def timer():
+    start = time.perf_counter()
+    yield
+    print(f"elapsed {time.perf_counter() - start:.3f}s")</code></pre></div></section>
+<section id="async" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Async Python with asyncio</h2></div><p>For I/O-bound work — calling APIs, querying databases, handling many connections — <code>asyncio</code> lets one thread juggle thousands of waiting operations. It's the foundation under FastAPI and modern Python servers.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import asyncio
+import httpx
+
+async def fetch(client, url):
+    r = await client.get(url)          # 'await' yields control while waiting
+    return r.status_code
+
+async def main(urls):
+    async with httpx.AsyncClient() as client:
+        # run all requests concurrently, not one-by-one
+        results = await asyncio.gather(*(fetch(client, u) for u in urls))
+    return results
+
+asyncio.run(main(["https://example.com"] * 10))</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Async helps I/O-bound work, not CPU-bound work. For heavy computation use processes (or hand it to a task queue like Celery — see the Data Stores guide). Never call blocking code inside an async function.</div></div></section>
+<section id="env" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Environments, packaging &amp; tooling</h2></div><p>Reproducible projects start with isolation. A virtual environment keeps each project's dependencies separate; <code>pyproject.toml</code> declares them; modern tools keep code clean automatically.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">python -m venv .venv &amp;&amp; source .venv/bin/activate   # isolate dependencies
+pip install -e ".[dev]"                              # install your package + dev extras
+
+# Fast, modern tooling
+pip install ruff black mypy pre-commit
+ruff check .            # lint (replaces flake8/isort, very fast)
+black .                 # auto-format
+pre-commit install      # run all checks on every git commit</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">file</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-text"># pyproject.toml — the single source of project truth
+[project]
+name = "myapp"
+version = "0.1.0"
+dependencies = ["fastapi", "httpx"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy"]</code></pre></div>
+<div class="callout note"><span class="ctag">Note</span><div><code>uv</code> is a fast, modern replacement for pip/venv worth knowing in 2026. Whatever you use, always pin dependencies and never <code>pip install</code> into the system Python.</div></div></section>
+<section id="dataclasses" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Dataclasses, errors &amp; logging</h2></div><p>Three everyday tools for clean code: dataclasses for simple data holders, custom exceptions for clear error handling, and logging instead of <code>print</code>.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import logging
+from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class User:                          # auto __init__/__repr__/__eq__
+    name: str
+    roles: list[str] = field(default_factory=list)
+    active: bool = True
+
+class PaymentError(Exception):       # specific, catchable errors
+    """Raised when a payment cannot be processed."""
+
+def charge(user: User, amount: int) -&gt; None:
+    if amount &lt;= 0:
+        raise PaymentError("amount must be positive")
+    logger.info("charged %s cents to %s", amount, user.name)   # not print()</code></pre></div>
+<div class="callout key"><span class="ctag">Key idea</span><div>Use <code>logging</code> over <code>print</code>: it has levels, can be configured per environment, and writes structured output you can search in production.</div></div></section>
+<section id="testbasics" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Unit testing fundamentals</h2></div><p>Tests are what let you change code without fear. A <b>unit test</b> checks one small piece of behavior in isolation; a good suite is fast, deterministic, and run on every commit. The classic shape is Arrange–Act–Assert.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python"># A pure function is the easiest thing to test
+def slugify(text: str) -&gt; str:
+    return "-".join(text.lower().split())
+
+def test_slugify_basic():
+    # Arrange / Act / Assert
+    assert slugify("Hello World") == "hello-world"
+
+def test_slugify_collapses_spaces():
+    assert slugify("  a   b ") == "a-b"</code></pre></div>
+<ul><li>Test <b>behavior</b>, not implementation — so refactors don't break tests.</li><li>Each test should be independent and able to run in any order.</li><li>Aim for the <b>testing pyramid</b>: many fast unit tests, fewer integration tests, a handful of end-to-end.</li></ul></section>
+<section id="pytest" class="topic"><div class="topic-head"><span class="badge b-core">Core</span><h2>Pytest in depth</h2></div><p><b>pytest</b> is the de-facto Python test framework: plain <code>assert</code>, powerful fixtures for setup, and parametrization to run one test across many inputs.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">import pytest
+
+# Fixtures provide reusable, isolated setup (DB, client, temp data)
+@pytest.fixture
+def cart():
+    return {"items": [], "total": 0}
+
+def add(cart, price):
+    cart["items"].append(price); cart["total"] += price
+    return cart
+
+def test_add_updates_total(cart):          # fixture injected by name
+    add(cart, 100)
+    assert cart["total"] == 100
+
+# Parametrize: one test, many cases
+@pytest.mark.parametrize("price,expected", [(100, 100), (0, 0), (50, 50)])
+def test_add_various(cart, price, expected):
+    assert add(cart, price)["total"] == expected
+
+def test_rejects_negative(cart):
+    with pytest.raises(ValueError):        # assert an exception is raised
+        add(cart, -1)</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install pytest
+pytest -q                      # run quietly
+pytest -k "total" -v           # run tests matching a name, verbose
+pytest --lf                    # re-run only last failures</code></pre></div>
+<div class="callout try"><span class="ctag">Try it</span><div>Put shared fixtures in a <code>conftest.py</code> at your tests root — pytest discovers them automatically across all test files.</div></div></section>
+<section id="testci" class="topic"><div class="topic-head"><span class="badge b-adv">Advanced</span><h2>Mocking, coverage &amp; TDD</h2></div><p>To test code that touches the outside world (APIs, time, randomness), you <b>mock</b> those dependencies. Coverage shows what's untested; TDD flips the order — test first, then make it pass.</p>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">python</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-python">from unittest.mock import patch
+import myapp
+
+# Replace a real network call with a fake during the test
+@patch("myapp.httpx.get")
+def test_get_user(mock_get):
+    mock_get.return_value.json.return_value = {"id": 1, "name": "Ada"}
+    user = myapp.get_user(1)
+    assert user["name"] == "Ada"
+    mock_get.assert_called_once()</code></pre></div>
+<div class="codewrap"><div class="codebar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="codelabel">terminal</span><button class="copy" type="button" aria-label="Copy code">Copy</button></div><pre><code class="language-bash">pip install pytest-cov
+pytest --cov=myapp --cov-report=term-missing   # see exactly which lines lack tests</code></pre></div>
+<ul><li><b>Mock at the boundary</b> — fake the network/DB, test your real logic.</li><li><b>Coverage is a guide, not a goal</b> — 90% of meaningful paths beats 100% of trivial getters.</li><li><b>TDD loop</b> — red (failing test) → green (make it pass) → refactor.</li><li><b>Run tests in CI</b> on every push (see the DevOps &amp; Cloud guide) so nothing regresses.</li></ul></section>
+    <footer>Part of the <a href="ai-engineer-roadmap.html">Senior AI Engineer Roadmap</a>. Pairs with <a href="fastapi-mastery.html">FastAPI</a> and <a href="devops-cloud.html">DevOps &amp; Cloud</a>.</footer>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){
+  if(window.hljs){document.querySelectorAll('pre code').forEach(function(b){try{hljs.highlightElement(b);}catch(e){}});}
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.closest('.codewrap').querySelector('code').innerText;
+      navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';btn.classList.add('done');
+        setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}).catch(function(){btn.textContent='Ctrl+C';});
+    });
+  });
+  var bar=document.getElementById('progress'),navFill=document.getElementById('navFill'),pct=document.getElementById('pctLabel');
+  function onScroll(){var h=document.documentElement,max=h.scrollHeight-h.clientHeight,r=max>0?h.scrollTop/max:0;
+    bar.style.width=(r*100)+'%';navFill.style.width=(r*100)+'%';pct.textContent=Math.round(r*100)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var links=[].slice.call(document.querySelectorAll('.sidebar a[href^="#"]')),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];
+    if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-25% 0px -65% 0px'});
+  document.querySelectorAll('section.topic').forEach(function(s){obs.observe(s);});
+  var sb=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),mb=document.getElementById('menuBtn');
+  function tog(o){sb.classList.toggle('open',o);scrim.classList.toggle('show',o);}
+  if(mb)mb.addEventListener('click',function(){tog(!sb.classList.contains('open'));});
+  scrim.addEventListener('click',function(){tog(false);});
+  sb.addEventListener('click',function(e){if(e.target.tagName==='A')tog(false);});
+})();
+</script>
+</body>
+</html>
